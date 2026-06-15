@@ -1,0 +1,242 @@
+// ============================================================
+// Project Tunguska - eThekwini Municipal Venue Booking System
+// Prisma Schema
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ──────────────────────────────────────────────────────────────
+// ENUMS
+// ──────────────────────────────────────────────────────────────
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum BookingStatus {
+  PENDING
+  APPROVED
+  DECLINED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+  REFUNDED
+}
+
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+// ──────────────────────────────────────────────────────────────
+// USER
+// ──────────────────────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  passwordHash  String
+  firstName     String
+  lastName      String
+  phone         String?
+  role          UserRole  @default(USER)
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  bookings      Booking[]
+
+  @@map("users")
+}
+
+// ──────────────────────────────────────────────────────────────
+// VENUE CATEGORY
+// Extensible: "Halls", "Sports", "Parks", "Swimming Pools", etc.
+// ──────────────────────────────────────────────────────────────
+
+model VenueCategory {
+  id            String      @id @default(uuid())
+  name          String      @unique    // e.g. "Halls", "Sports", "Parks"
+  slug          String      @unique    // e.g. "halls", "sports", "parks"
+  description   String?
+  icon          String?                // icon identifier for frontend
+  sortOrder     Int         @default(0)
+  isActive      Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  venues        Venue[]
+  sportTypes    SportType[]
+
+  @@map("venue_categories")
+}
+
+// ──────────────────────────────────────────────────────────────
+// SPORT TYPE
+// Only relevant when category is "Sports".
+// Allows the extra narrowing step: Soccer, Hockey, Tennis, etc.
+// ──────────────────────────────────────────────────────────────
+
+model SportType {
+  id            String        @id @default(uuid())
+  name          String                  // e.g. "Soccer", "Hockey", "Tennis"
+  slug          String        @unique   // e.g. "soccer", "hockey"
+  description   String?
+  icon          String?
+  sortOrder     Int           @default(0)
+  isActive      Boolean       @default(true)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  categoryId    String
+  category      VenueCategory @relation(fields: [categoryId], references: [id])
+
+  venues        Venue[]
+
+  @@map("sport_types")
+}
+
+// ──────────────────────────────────────────────────────────────
+// VENUE
+// The bookable facility itself: a specific hall, field, court, etc.
+// ──────────────────────────────────────────────────────────────
+
+model Venue {
+  id            String        @id @default(uuid())
+  name          String                  // e.g. "Moses Mabhida Community Hall"
+  slug          String        @unique
+  description   String?
+  address       String
+  suburb        String?
+  city          String        @default("Durban")
+  latitude      Float?
+  longitude     Float?
+  capacity      Int?
+  pricePerHour  Float                   // ZAR
+  amenities     String[]                // e.g. ["parking", "wifi", "kitchen"]
+  rules         String?                 // usage rules / terms
+  isActive      Boolean       @default(true)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  categoryId    String
+  category      VenueCategory @relation(fields: [categoryId], references: [id])
+
+  sportTypeId   String?
+  sportType     SportType?    @relation(fields: [sportTypeId], references: [id])
+
+  images        VenueImage[]
+  operatingHours OperatingHours[]
+  bookings      Booking[]
+
+  @@map("venues")
+}
+
+// ──────────────────────────────────────────────────────────────
+// VENUE IMAGE
+// Multiple images per venue for the listing cards and detail page.
+// ──────────────────────────────────────────────────────────────
+
+model VenueImage {
+  id            String    @id @default(uuid())
+  url           String
+  altText       String?
+  sortOrder     Int       @default(0)
+  isPrimary     Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+
+  venueId       String
+  venue         Venue     @relation(fields: [venueId], references: [id], onDelete: Cascade)
+
+  @@map("venue_images")
+}
+
+// ──────────────────────────────────────────────────────────────
+// OPERATING HOURS
+// Defines when a venue is available for booking on each day.
+// This drives the calendar availability display.
+// ──────────────────────────────────────────────────────────────
+
+model OperatingHours {
+  id            String    @id @default(uuid())
+  dayOfWeek     DayOfWeek
+  openTime      String              // "08:00" (stored as HH:mm)
+  closeTime     String              // "22:00"
+  isClosed      Boolean   @default(false)
+
+  venueId       String
+  venue         Venue     @relation(fields: [venueId], references: [id], onDelete: Cascade)
+
+  @@unique([venueId, dayOfWeek])
+  @@map("operating_hours")
+}
+
+// ──────────────────────────────────────────────────────────────
+// BOOKING
+// A user's reservation of a venue for a specific date/time window.
+// Includes the approval workflow: PENDING → APPROVED / DECLINED.
+// ──────────────────────────────────────────────────────────────
+
+model Booking {
+  id            String        @id @default(uuid())
+  bookingDate   DateTime                // the date of the booking
+  startTime     String                  // "09:00" (HH:mm)
+  endTime       String                  // "11:00" (HH:mm)
+  totalAmount   Float                   // calculated from duration × pricePerHour
+  status        BookingStatus @default(PENDING)
+  purpose       String?                 // what the booking is for
+  notes         String?                 // additional notes from the user
+  declineReason String?                 // reason if admin declines
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  userId        String
+  user          User          @relation(fields: [userId], references: [id])
+
+  venueId       String
+  venue         Venue         @relation(fields: [venueId], references: [id])
+
+  payment       Payment?
+
+  @@map("bookings")
+}
+
+// ──────────────────────────────────────────────────────────────
+// PAYMENT
+// Tracks payment status per booking.
+// MVP: admin manually marks as paid.
+// Production: integrate PayFast / Yoco gateway.
+// ──────────────────────────────────────────────────────────────
+
+model Payment {
+  id              String        @id @default(uuid())
+  amount          Float
+  status          PaymentStatus @default(UNPAID)
+  method          String?                 // "cash", "eft", "card" (future)
+  reference       String?                 // payment reference number
+  paidAt          DateTime?
+  gatewayId       String?                 // future: PayFast/Yoco transaction ID
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  bookingId       String        @unique
+  booking         Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@map("payments")
+}
