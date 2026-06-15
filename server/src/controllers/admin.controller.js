@@ -67,6 +67,25 @@ const updateUser = async (req, res, next) => {
 
 // ── VENUES ───────────────────────────────────────────────────
 
+// GET /api/admin/venues
+const getAllVenues = async (req, res, next) => {
+  try {
+    const venues = await prisma.venue.findMany({
+      include: {
+        category: { select: { id: true, name: true, slug: true } },
+        sportType: { select: { id: true, name: true, slug: true } },
+        images: { where: { isPrimary: true }, take: 1 },
+        _count: { select: { bookings: true } },
+      },
+      orderBy: { name: "asc" },
+    });
+
+    res.json({ success: true, data: venues });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // POST /api/admin/venues
 const createVenue = async (req, res, next) => {
   try {
@@ -295,7 +314,7 @@ const getDashboardStats = async (req, res, next) => {
 
 module.exports = {
   getUsers, updateUser,
-  createVenue, updateVenue, deleteVenue,
+  getAllVenues, createVenue, updateVenue, deleteVenue,
   getAllBookings, approveBooking, declineBooking, updatePaymentStatus,
   createCategory, createSportType,
   getDashboardStats,

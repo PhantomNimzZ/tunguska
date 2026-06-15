@@ -2,7 +2,7 @@ const router = require("express").Router();
 const { authenticate, authorizeAdmin } = require("../middleware/auth.middleware");
 const {
   getUsers, updateUser,
-  createVenue, updateVenue, deleteVenue,
+  getAllVenues, createVenue, updateVenue, deleteVenue,
   getAllBookings, approveBooking, declineBooking, updatePaymentStatus,
   createCategory, createSportType,
   getDashboardStats,
@@ -19,6 +19,7 @@ router.get("/users", getUsers);
 router.patch("/users/:id", updateUser);
 
 // Venues
+router.get("/venues", getAllVenues);
 router.post("/venues", createVenue);
 router.put("/venues/:id", updateVenue);
 router.delete("/venues/:id", deleteVenue);
