@@ -800,3 +800,151 @@ a { color: var(--primary); text-decoration: none; }
 
 .role-badge.user { background: var(--primary-light); color: var(--primary-dark); }
 .role-badge.admin { background: #fff3cd; color: #856404; }
+
+/* ── Clickable badges ────────────────────────── */
+
+.status-badge.clickable {
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.2s;
+}
+
+.status-badge.clickable:hover { opacity: 0.75; }
+
+/* ── Small button variant ────────────────────── */
+
+.btn-sm {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.8rem;
+}
+
+/* ── Categories admin ────────────────────────── */
+
+.categories-admin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.25rem;
+  margin-top: 1.5rem;
+}
+
+.category-admin-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+}
+
+.category-admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.category-admin-header h3 { margin: 0; }
+
+.category-admin-desc {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+.sport-types-list {
+  margin: 1rem 0;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.sport-types-list h4 {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.sport-type-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.4rem 0;
+  font-size: 0.9rem;
+}
+
+.sport-type-row:not(:last-child) {
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── Image manager ───────────────────────────── */
+
+.image-manager-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.image-manager-header h3 { margin: 0; }
+
+.upload-btn { cursor: pointer; }
+.upload-btn.uploading { opacity: 0.6; cursor: not-allowed; }
+
+.image-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.75rem;
+}
+
+.image-card {
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  position: relative;
+}
+
+.image-card.is-primary { border-color: var(--primary); }
+
+.image-card img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  display: block;
+}
+
+.primary-badge {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  background: var(--primary);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+}
+
+.image-card-actions {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.4rem;
+  justify-content: center;
+}
+
+.image-card-actions .btn-action { font-size: 0.75rem; padding: 0.2rem 0.5rem; }
+
+/* ── Payment summary ─────────────────────────── */
+
+.payment-summary {
+  background: var(--bg);
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.payment-summary p { margin-bottom: 0.25rem; font-size: 0.9rem; }
+
+.payment-amount {
+  font-size: 1.25rem !important;
+  font-weight: 700;
+  color: var(--primary);
+  margin-top: 0.5rem !important;
+}

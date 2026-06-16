@@ -1,11 +1,15 @@
 import { useState, useEffect, useMemo } from "react";
 import api from "../../api/client";
+import Modal from "../../components/common/Modal";
 import toast from "react-hot-toast";
 
 export default function AdminBookingsPage() {
   const [bookings, setBookings] = useState([]);
   const [filter, setFilter] = useState("");
   const [search, setSearch] = useState("");
+  const [showPayment, setShowPayment] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [paymentForm, setPaymentForm] = useState({ status: "PAID", method: "", reference: "" });
 
   const fetchBookings = () => {
     const params = filter ? { status: filter } : {};
@@ -36,6 +40,28 @@ export default function AdminBookingsPage() {
     await api.patch(`/admin/bookings/${id}/decline`, { reason });
     toast.success("Booking declined");
     fetchBookings();
+  };
+
+  const openPayment = (booking) => {
+    setSelectedBooking(booking);
+    setPaymentForm({
+      status: booking.payment?.status || "UNPAID",
+      method: booking.payment?.method || "",
+      reference: booking.payment?.reference || "",
+    });
+    setShowPayment(true);
+  };
+
+  const savePayment = async (e) => {
+    e.preventDefault();
+    try {
+      await api.patch(`/admin/bookings/${selectedBooking.id}/payment`, paymentForm);
+      toast.success("Payment status updated.");
+      setShowPayment(false);
+      fetchBookings();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to update payment.");
+    }
   };
 
   return (
@@ -86,9 +112,13 @@ export default function AdminBookingsPage() {
               <td>{b.startTime} – {b.endTime}</td>
               <td>R{b.totalAmount.toFixed(2)}</td>
               <td>
-                <span className={`status-badge ${(b.payment?.status || "unpaid").toLowerCase()}`}>
+                <button
+                  className={`status-badge clickable ${(b.payment?.status || "unpaid").toLowerCase()}`}
+                  onClick={() => openPayment(b)}
+                  title="Click to update payment"
+                >
                   {b.payment?.status || "UNPAID"}
-                </span>
+                </button>
               </td>
               <td>
                 <span className={`status-badge ${b.status.toLowerCase()}`}>{b.status}</span>
@@ -109,6 +139,56 @@ export default function AdminBookingsPage() {
           )}
         </tbody>
       </table>
+
+      {/* Payment modal */}
+      <Modal
+        isOpen={showPayment}
+        onClose={() => setShowPayment(false)}
+        title={selectedBooking ? `Payment: ${selectedBooking.venue.name}` : "Update payment"}
+      >
+        {selectedBooking && (
+          <form onSubmit={savePayment} className="admin-form">
+            <div className="payment-summary">
+              <p><strong>{selectedBooking.user.firstName} {selectedBooking.user.lastName}</strong></p>
+              <p>{new Date(selectedBooking.bookingDate).toLocaleDateString("en-ZA")} · {selectedBooking.startTime} – {selectedBooking.endTime}</p>
+              <p className="payment-amount">R{selectedBooking.totalAmount.toFixed(2)}</p>
+            </div>
+
+            <label>Payment status *</label>
+            <select
+              value={paymentForm.status}
+              onChange={(e) => setPaymentForm({ ...paymentForm, status: e.target.value })}
+            >
+              <option value="UNPAID">Unpaid</option>
+              <option value="PAID">Paid</option>
+              <option value="REFUNDED">Refunded</option>
+            </select>
+
+            <label>Payment method</label>
+            <select
+              value={paymentForm.method}
+              onChange={(e) => setPaymentForm({ ...paymentForm, method: e.target.value })}
+            >
+              <option value="">Select method</option>
+              <option value="cash">Cash</option>
+              <option value="eft">EFT / Bank transfer</option>
+              <option value="card">Card</option>
+            </select>
+
+            <label>Reference number</label>
+            <input
+              value={paymentForm.reference}
+              onChange={(e) => setPaymentForm({ ...paymentForm, reference: e.target.value })}
+              placeholder="e.g. EFT ref or receipt number"
+            />
+
+            <div className="form-actions">
+              <button type="button" className="btn-secondary" onClick={() => setShowPayment(false)}>Cancel</button>
+              <button type="submit" className="btn-primary">Update payment</button>
+            </div>
+          </form>
+        )}
+      </Modal>
     </div>
   );
 }

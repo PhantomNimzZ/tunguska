@@ -267,6 +267,20 @@ const createCategory = async (req, res, next) => {
   }
 };
 
+// PUT /api/admin/categories/:id
+const updateCategory = async (req, res, next) => {
+  try {
+    const { name, slug, description, icon, sortOrder, isActive } = req.body;
+    const category = await prisma.venueCategory.update({
+      where: { id: req.params.id },
+      data: { name, slug, description, icon, sortOrder, isActive },
+    });
+    res.json({ success: true, data: category });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // POST /api/admin/sport-types
 const createSportType = async (req, res, next) => {
   try {
@@ -275,6 +289,96 @@ const createSportType = async (req, res, next) => {
       data: { name, slug, description, icon, sortOrder, categoryId },
     });
     res.status(201).json({ success: true, data: sportType });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// PUT /api/admin/sport-types/:id
+const updateSportType = async (req, res, next) => {
+  try {
+    const { name, slug, description, icon, sortOrder, isActive } = req.body;
+    const sportType = await prisma.sportType.update({
+      where: { id: req.params.id },
+      data: { name, slug, description, icon, sortOrder, isActive },
+    });
+    res.json({ success: true, data: sportType });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ── VENUE IMAGES ─────────────────────────────────────────────
+
+// POST /api/admin/venues/:id/images
+const uploadVenueImage = async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: "No file uploaded." });
+    }
+
+    const venue = await prisma.venue.findUnique({ where: { id: req.params.id } });
+    if (!venue) {
+      return res.status(404).json({ success: false, message: "Venue not found." });
+    }
+
+    const existingCount = await prisma.venueImage.count({ where: { venueId: venue.id } });
+
+    const image = await prisma.venueImage.create({
+      data: {
+        url: `/uploads/${req.file.filename}`,
+        altText: venue.name,
+        sortOrder: existingCount,
+        isPrimary: existingCount === 0,
+        venueId: venue.id,
+      },
+    });
+
+    res.status(201).json({ success: true, data: image });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// GET /api/admin/venues/:id/images
+const getVenueImages = async (req, res, next) => {
+  try {
+    const images = await prisma.venueImage.findMany({
+      where: { venueId: req.params.id },
+      orderBy: { sortOrder: "asc" },
+    });
+    res.json({ success: true, data: images });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// PATCH /api/admin/venues/:venueId/images/:imageId/primary
+const setImagePrimary = async (req, res, next) => {
+  try {
+    const { venueId, imageId } = req.params;
+
+    await prisma.venueImage.updateMany({
+      where: { venueId },
+      data: { isPrimary: false },
+    });
+
+    const image = await prisma.venueImage.update({
+      where: { id: imageId },
+      data: { isPrimary: true },
+    });
+
+    res.json({ success: true, data: image });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// DELETE /api/admin/venues/:venueId/images/:imageId
+const deleteVenueImage = async (req, res, next) => {
+  try {
+    await prisma.venueImage.delete({ where: { id: req.params.imageId } });
+    res.json({ success: true, message: "Image deleted." });
   } catch (error) {
     next(error);
   }
@@ -316,6 +420,7 @@ module.exports = {
   getUsers, updateUser,
   getAllVenues, createVenue, updateVenue, deleteVenue,
   getAllBookings, approveBooking, declineBooking, updatePaymentStatus,
-  createCategory, createSportType,
+  createCategory, updateCategory, createSportType, updateSportType,
+  uploadVenueImage, getVenueImages, setImagePrimary, deleteVenueImage,
   getDashboardStats,
 };

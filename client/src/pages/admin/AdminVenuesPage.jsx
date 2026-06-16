@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import api from "../../api/client";
 import Modal from "../../components/common/Modal";
 import VenueForm from "../../components/admin/VenueForm";
+import VenueImageManager from "../../components/admin/VenueImageManager";
 import toast from "react-hot-toast";
 
 export default function AdminVenuesPage() {
@@ -10,6 +11,8 @@ export default function AdminVenuesPage() {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editingVenue, setEditingVenue] = useState(null);
+  const [showImages, setShowImages] = useState(false);
+  const [imageVenue, setImageVenue] = useState(null);
 
   const fetchVenues = () => {
     api.get("/admin/venues").then(({ data }) => setVenues(data.data));
@@ -129,6 +132,7 @@ export default function AdminVenuesPage() {
               </td>
               <td className="td-actions">
                 <button onClick={() => handleEdit(v.slug)} className="btn-action">Edit</button>
+                <button onClick={() => { setImageVenue(v); setShowImages(true); }} className="btn-action">Images</button>
                 <button
                   onClick={() => handleToggleStatus(v)}
                   className={`btn-action ${v.isActive ? "btn-action-warn" : "btn-action-success"}`}
@@ -154,6 +158,16 @@ export default function AdminVenuesPage() {
           onSave={handleSave}
           onCancel={() => { setShowForm(false); setEditingVenue(null); }}
         />
+      </Modal>
+
+      <Modal
+        isOpen={showImages}
+        onClose={() => { setShowImages(false); setImageVenue(null); }}
+        title={imageVenue ? `Images: ${imageVenue.name}` : "Venue images"}
+      >
+        {imageVenue && (
+          <VenueImageManager venueId={imageVenue.id} venueName={imageVenue.name} />
+        )}
       </Modal>
     </div>
   );

@@ -25,6 +25,7 @@ import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import AdminUsersPage from "./pages/admin/AdminUsersPage";
 import AdminVenuesPage from "./pages/admin/AdminVenuesPage";
 import AdminBookingsPage from "./pages/admin/AdminBookingsPage";
+import AdminCategoriesPage from "./pages/admin/AdminCategoriesPage";
 
 // Route guards
 function PrivateRoute({ children }) {
@@ -65,6 +66,7 @@ function App() {
         <Route index element={<AdminDashboardPage />} />
         <Route path="users" element={<AdminUsersPage />} />
         <Route path="venues" element={<AdminVenuesPage />} />
+        <Route path="categories" element={<AdminCategoriesPage />} />
         <Route path="bookings" element={<AdminBookingsPage />} />
       </Route>
     </Routes>
