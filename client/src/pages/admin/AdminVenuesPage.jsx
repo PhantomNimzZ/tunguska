@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import api from "../../api/client";
 import Modal from "../../components/common/Modal";
 import VenueForm from "../../components/admin/VenueForm";
@@ -6,6 +6,8 @@ import toast from "react-hot-toast";
 
 export default function AdminVenuesPage() {
   const [venues, setVenues] = useState([]);
+  const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editingVenue, setEditingVenue] = useState(null);
 
@@ -14,6 +16,26 @@ export default function AdminVenuesPage() {
   };
 
   useEffect(fetchVenues, []);
+
+  const filteredVenues = useMemo(() => {
+    return venues.filter((v) => {
+      const matchesSearch = !search ||
+        v.name.toLowerCase().includes(search.toLowerCase()) ||
+        (v.suburb || "").toLowerCase().includes(search.toLowerCase()) ||
+        v.address.toLowerCase().includes(search.toLowerCase());
+      const matchesCategory = !categoryFilter ||
+        v.category?.slug === categoryFilter;
+      return matchesSearch && matchesCategory;
+    });
+  }, [venues, search, categoryFilter]);
+
+  const categories = useMemo(() => {
+    const cats = new Map();
+    venues.forEach((v) => {
+      if (v.category) cats.set(v.category.slug, v.category.name);
+    });
+    return Array.from(cats, ([slug, name]) => ({ slug, name }));
+  }, [venues]);
 
   const handleCreate = () => {
     setEditingVenue(null);
@@ -46,23 +68,38 @@ export default function AdminVenuesPage() {
     }
   };
 
-  const handleDelete = async (venue) => {
-    if (!confirm(`Are you sure you want to deactivate "${venue.name}"? This can be reversed.`)) return;
-
-    try {
-      await api.delete(`/admin/venues/${venue.id}`);
-      fetchVenues();
-      toast.success("Venue deactivated.");
-    } catch {
-      toast.error("Failed to deactivate venue.");
-    }
-  };
-
   return (
     <div className="admin-page">
       <div className="admin-page-header">
         <h1>Venues</h1>
         <button className="btn-primary" onClick={handleCreate}>+ Add venue</button>
+      </div>
+
+      <div className="admin-filters">
+        <input
+          type="text"
+          className="search-input"
+          placeholder="Search by name, suburb, or address..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <div className="filter-bar">
+          <button
+            className={`filter-btn ${categoryFilter === "" ? "active" : ""}`}
+            onClick={() => setCategoryFilter("")}
+          >
+            All
+          </button>
+          {categories.map((c) => (
+            <button
+              key={c.slug}
+              className={`filter-btn ${categoryFilter === c.slug ? "active" : ""}`}
+              onClick={() => setCategoryFilter(c.slug)}
+            >
+              {c.name}
+            </button>
+          ))}
+        </div>
       </div>
 
       <table className="admin-table">
@@ -78,7 +115,7 @@ export default function AdminVenuesPage() {
           </tr>
         </thead>
         <tbody>
-          {venues.map((v) => (
+          {filteredVenues.map((v) => (
             <tr key={v.id} className={!v.isActive ? "row-inactive" : ""}>
               <td className="td-bold">{v.name}</td>
               <td>{v.category?.name}{v.sportType ? ` / ${v.sportType.name}` : ""}</td>
@@ -101,8 +138,8 @@ export default function AdminVenuesPage() {
               </td>
             </tr>
           ))}
-          {venues.length === 0 && (
-            <tr><td colSpan={7} className="td-empty">No venues found. Create one to get started.</td></tr>
+          {filteredVenues.length === 0 && (
+            <tr><td colSpan={7} className="td-empty">No venues found{search ? " matching your search" : ""}.</td></tr>
           )}
         </tbody>
       </table>

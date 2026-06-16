@@ -356,6 +356,9 @@ a { color: var(--primary); text-decoration: none; }
 .status-badge.approved { background: #d4edda; color: #155724; }
 .status-badge.declined { background: #f8d7da; color: #721c24; }
 .status-badge.cancelled { background: #e2e3e5; color: #383d41; }
+.status-badge.unpaid { background: #fde8e8; color: var(--danger); }
+.status-badge.paid { background: #d4edda; color: #155724; }
+.status-badge.refunded { background: #e2e3e5; color: #383d41; }
 
 /* ── Tags ─────────────────────────────────────── */
 
@@ -418,10 +421,27 @@ a { color: var(--primary); text-decoration: none; }
 .sidebar-footer {
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   padding-top: 1rem;
+  margin-top: auto;
 }
 
 .sidebar-user { font-size: 0.85rem; margin-bottom: 0.5rem; }
-.sidebar-footer .btn-logout { color: rgba(255, 255, 255, 0.6); }
+
+.sidebar-footer .btn-logout {
+  color: rgba(255, 255, 255, 0.6);
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.2s, color 0.2s;
+}
+
+.sidebar-footer .btn-logout:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
 
 .admin-main { flex: 1; padding: 2rem; }
 .admin-page h1 { margin-bottom: 1.5rem; }
@@ -747,6 +767,11 @@ a { color: var(--primary); text-decoration: none; }
 }
 
 .row-inactive { opacity: 0.55; }
+
+.td-sub {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
 
 .btn-action {
   padding: 0.3rem 0.65rem;
