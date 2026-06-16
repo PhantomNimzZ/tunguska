@@ -123,9 +123,10 @@ const updateVenue = async (req, res, next) => {
     const {
       name, slug, description, address, suburb, latitude, longitude,
       capacity, pricePerHour, amenities, rules, categoryId, sportTypeId,
-      isActive,
+      isActive, operatingHours,
     } = req.body;
 
+    // Update venue fields
     const venue = await prisma.venue.update({
       where: { id: req.params.id },
       data: {
@@ -136,7 +137,27 @@ const updateVenue = async (req, res, next) => {
       include: { category: true, sportType: true },
     });
 
-    res.json({ success: true, data: venue });
+    // Update operating hours if provided
+    if (operatingHours && Array.isArray(operatingHours)) {
+      await prisma.operatingHours.deleteMany({ where: { venueId: venue.id } });
+      await prisma.operatingHours.createMany({
+        data: operatingHours.map((h) => ({
+          venueId: venue.id,
+          dayOfWeek: h.dayOfWeek,
+          openTime: h.openTime,
+          closeTime: h.closeTime,
+          isClosed: h.isClosed || false,
+        })),
+      });
+    }
+
+    // Refetch with operating hours included
+    const updated = await prisma.venue.findUnique({
+      where: { id: venue.id },
+      include: { category: true, sportType: true, operatingHours: true },
+    });
+
+    res.json({ success: true, data: updated });
   } catch (error) {
     next(error);
   }
@@ -173,8 +194,8 @@ const getAllBookings = async (req, res, next) => {
         user: {
           select: { id: true, firstName: true, lastName: true, email: true, phone: true },
         },
-        venue: { select: { id: true, name: true, slug: true } },
-        payment: { select: { status: true, amount: true } },
+        venue: { select: { id: true, name: true, slug: true, address: true, suburb: true, pricePerHour: true } },
+        payment: true,
       },
       orderBy: { createdAt: "desc" },
     });

@@ -313,10 +313,9 @@ export default function VenueForm({ venue, onSave, onCancel }) {
         />
       </section>
 
-      {!isEdit && (
-        <section className="form-section">
-          <h3>Operating hours</h3>
-          <div className="hours-grid">
+      <section className="form-section">
+        <h3>Operating hours</h3>
+        <div className="hours-grid">
             {form.operatingHours.map((h, i) => (
               <div key={h.dayOfWeek} className={`hours-row ${h.isClosed ? "closed" : ""}`}>
                 <span className="hours-day">{h.dayOfWeek.slice(0, 3)}</span>
@@ -346,8 +345,7 @@ export default function VenueForm({ venue, onSave, onCancel }) {
               </div>
             ))}
           </div>
-        </section>
-      )}
+      </section>
 
       <div className="form-actions">
         <button type="button" className="btn-secondary" onClick={onCancel}>Cancel</button>

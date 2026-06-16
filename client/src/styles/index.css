@@ -948,3 +948,130 @@ a { color: var(--primary); text-decoration: none; }
   color: var(--primary);
   margin-top: 0.5rem !important;
 }
+
+/* ── Dashboard sections ──────────────────────── */
+
+.dashboard-sections { margin-top: 2rem; }
+
+.dashboard-section {
+  margin-bottom: 2rem;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.section-header h2 { font-size: 1.1rem; }
+
+.section-link {
+  font-size: 0.85rem;
+  color: var(--primary);
+}
+
+.section-link:hover { text-decoration: underline; }
+
+/* ── Pending approvals ───────────────────────── */
+
+.pending-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.pending-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--warning);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  gap: 1rem;
+}
+
+.pending-info { flex: 1; }
+
+.pending-primary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+
+.pending-date {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.pending-secondary {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.pending-actions {
+  display: flex;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+/* ── Clickable table rows ────────────────────── */
+
+.row-clickable {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.row-clickable:hover { background: var(--bg); }
+
+/* ── Booking detail ──────────────────────────── */
+
+.booking-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.detail-section {
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.detail-section:last-child { border-bottom: none; }
+
+.detail-section h3 {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+  letter-spacing: 0.03em;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.detail-item.full-width { grid-column: 1 / -1; }
+
+.detail-label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 0.15rem;
+}
+
+.detail-amount {
+  font-weight: 700;
+  color: var(--primary);
+  font-size: 1.1rem;
+}
+
+.detail-decline {
+  color: var(--danger);
+  font-style: italic;
+}

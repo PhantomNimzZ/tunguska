@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import api from "../../api/client";
 import Modal from "../../components/common/Modal";
+import BookingDetail from "../../components/admin/BookingDetail";
 import toast from "react-hot-toast";
 
 export default function AdminBookingsPage() {
@@ -8,6 +9,7 @@ export default function AdminBookingsPage() {
   const [filter, setFilter] = useState("");
   const [search, setSearch] = useState("");
   const [showPayment, setShowPayment] = useState(false);
+  const [showDetail, setShowDetail] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [paymentForm, setPaymentForm] = useState({ status: "PAID", method: "", reference: "" });
 
@@ -28,13 +30,15 @@ export default function AdminBookingsPage() {
     );
   }, [bookings, search]);
 
-  const approve = async (id) => {
+  const approve = async (id, e) => {
+    e?.stopPropagation();
     await api.patch(`/admin/bookings/${id}/approve`);
     toast.success("Booking approved");
     fetchBookings();
   };
 
-  const decline = async (id) => {
+  const decline = async (id, e) => {
+    e?.stopPropagation();
     const reason = prompt("Reason for declining:");
     if (reason === null) return;
     await api.patch(`/admin/bookings/${id}/decline`, { reason });
@@ -42,7 +46,8 @@ export default function AdminBookingsPage() {
     fetchBookings();
   };
 
-  const openPayment = (booking) => {
+  const openPayment = (booking, e) => {
+    e?.stopPropagation();
     setSelectedBooking(booking);
     setPaymentForm({
       status: booking.payment?.status || "UNPAID",
@@ -50,6 +55,11 @@ export default function AdminBookingsPage() {
       reference: booking.payment?.reference || "",
     });
     setShowPayment(true);
+  };
+
+  const openDetail = (booking) => {
+    setSelectedBooking(booking);
+    setShowDetail(true);
   };
 
   const savePayment = async (e) => {
@@ -102,7 +112,7 @@ export default function AdminBookingsPage() {
         </thead>
         <tbody>
           {filteredBookings.map((b) => (
-            <tr key={b.id}>
+            <tr key={b.id} className="row-clickable" onClick={() => openDetail(b)}>
               <td className="td-bold">{b.venue.name}</td>
               <td>
                 <div>{b.user.firstName} {b.user.lastName}</div>
@@ -114,7 +124,7 @@ export default function AdminBookingsPage() {
               <td>
                 <button
                   className={`status-badge clickable ${(b.payment?.status || "unpaid").toLowerCase()}`}
-                  onClick={() => openPayment(b)}
+                  onClick={(e) => openPayment(b, e)}
                   title="Click to update payment"
                 >
                   {b.payment?.status || "UNPAID"}
@@ -126,8 +136,8 @@ export default function AdminBookingsPage() {
               <td className="td-actions">
                 {b.status === "PENDING" && (
                   <>
-                    <button onClick={() => approve(b.id)} className="btn-action btn-action-success">Approve</button>
-                    <button onClick={() => decline(b.id)} className="btn-action btn-action-warn">Decline</button>
+                    <button onClick={(e) => approve(b.id, e)} className="btn-action btn-action-success">Approve</button>
+                    <button onClick={(e) => decline(b.id, e)} className="btn-action btn-action-warn">Decline</button>
                   </>
                 )}
                 {b.status !== "PENDING" && <span className="td-sub">—</span>}
@@ -139,6 +149,15 @@ export default function AdminBookingsPage() {
           )}
         </tbody>
       </table>
+
+      {/* Booking detail modal */}
+      <Modal
+        isOpen={showDetail}
+        onClose={() => { setShowDetail(false); setSelectedBooking(null); }}
+        title="Booking details"
+      >
+        <BookingDetail booking={selectedBooking} />
+      </Modal>
 
       {/* Payment modal */}
       <Modal
