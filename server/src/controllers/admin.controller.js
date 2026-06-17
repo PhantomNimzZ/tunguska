@@ -31,6 +31,7 @@ const getUsers = async (req, res, next) => {
         role: true,
         isActive: true,
         createdAt: true,
+        createdBy: { select: { firstName: true, lastName: true } },
         _count: { select: { bookings: true } },
       },
       orderBy: { createdAt: "desc" },
@@ -88,7 +89,7 @@ const updateUser = async (req, res, next) => {
 // POST /api/admin/users
 const createUser = async (req, res, next) => {
   try {
-    const { firstName, lastName, email, phone } = req.body;
+    const { firstName, lastName, email, phone, role } = req.body;
 
     // Validate
     const error = validate.run(
@@ -99,7 +100,10 @@ const createUser = async (req, res, next) => {
     );
     if (error) return res.status(400).json({ success: false, message: error });
 
-    const existing = await prisma.user.findUnique({ where: { email } });
+    // Validate role if provided
+    const assignedRole = role && ["USER", "ADMIN"].includes(role.toUpperCase()) ? role.toUpperCase() : "USER";
+
+    const existing = await prisma.user.findUnique({ where: { email: email.trim().toLowerCase() } });
     if (existing) {
       return res.status(409).json({
         success: false,
@@ -116,7 +120,8 @@ const createUser = async (req, res, next) => {
         email: email.trim().toLowerCase(),
         phone: phone ? phone.replace(/[\s\-()]/g, "") : null,
         passwordHash: tempPassword,
-        role: "USER",
+        role: assignedRole,
+        createdById: req.user.id,
       },
       select: {
         id: true,
@@ -125,6 +130,7 @@ const createUser = async (req, res, next) => {
         lastName: true,
         phone: true,
         role: true,
+        createdById: true,
       },
     });
 

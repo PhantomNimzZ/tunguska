@@ -1962,3 +1962,8 @@ a.breadcrumb:hover { color: var(--primary); }
   border-radius: 6px;
   margin-top: 0.5rem;
 }
+
+.form-note-warn {
+  background: #fff3cd;
+  color: #856404;
+}

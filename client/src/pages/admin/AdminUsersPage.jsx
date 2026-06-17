@@ -11,7 +11,7 @@ export default function AdminUsersPage() {
   const [showEdit, setShowEdit] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [creatingUser, setCreatingUser] = useState(false);
-  const [createForm, setCreateForm] = useState({ firstName: "", lastName: "", email: "", phone: "" });
+  const [createForm, setCreateForm] = useState({ firstName: "", lastName: "", email: "", phone: "", role: "USER" });
   const [editForm, setEditForm] = useState({
     firstName: "",
     lastName: "",
@@ -76,7 +76,7 @@ export default function AdminUsersPage() {
       await api.post("/admin/users", createForm);
       toast.success("User account created with temporary password.");
       setShowCreate(false);
-      setCreateForm({ firstName: "", lastName: "", email: "", phone: "" });
+      setCreateForm({ firstName: "", lastName: "", email: "", phone: "", role: "USER" });
       fetchUsers();
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to create user.");
@@ -122,6 +122,7 @@ export default function AdminUsersPage() {
             <th>Role</th>
             <th>Bookings</th>
             <th>Status</th>
+            <th>Created by</th>
             <th>Joined</th>
             <th>Actions</th>
           </tr>
@@ -141,6 +142,7 @@ export default function AdminUsersPage() {
                   {u.isActive ? "Active" : "Inactive"}
                 </span>
               </td>
+              <td className="td-sub">{u.createdBy ? `${u.createdBy.firstName} ${u.createdBy.lastName}` : "Self-registered"}</td>
               <td>{new Date(u.createdAt).toLocaleDateString("en-ZA")}</td>
               <td className="td-actions">
                 <button onClick={() => handleEdit(u)} className="btn-action">Edit</button>
@@ -154,7 +156,7 @@ export default function AdminUsersPage() {
             </tr>
           ))}
           {users.length === 0 && (
-            <tr><td colSpan={8} className="td-empty">No users found.</td></tr>
+            <tr><td colSpan={9} className="td-empty">No users found.</td></tr>
           )}
         </tbody>
       </table>
@@ -257,6 +259,19 @@ export default function AdminUsersPage() {
             pattern="^(\+27|0)[0-9\s\-]{9,12}$"
             title="South African phone number: 0XX XXX XXXX or +27XX XXX XXXX"
           />
+
+          <label>Role</label>
+          <select
+            value={createForm.role}
+            onChange={(e) => setCreateForm({ ...createForm, role: e.target.value })}
+          >
+            <option value="USER">User</option>
+            <option value="ADMIN">Admin</option>
+          </select>
+
+          {createForm.role === "ADMIN" && (
+            <p className="form-note form-note-warn">This user will have full admin access to manage venues, bookings, and other users.</p>
+          )}
 
           <p className="form-note">The account will be created with a temporary password: <strong>welcome123</strong></p>
 
