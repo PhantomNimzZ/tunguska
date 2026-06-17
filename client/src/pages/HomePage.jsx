@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../api/client";
+import HeroSlideshow from "../components/common/HeroSlideshow";
 
 export default function HomePage() {
   const [categories, setCategories] = useState([]);
@@ -15,36 +16,34 @@ export default function HomePage() {
   return (
     <div className="home-page">
       {/* ── Hero ─────────────────────────────────── */}
-      <section className="hero">
-        <div className="hero-content">
-          <span className="hero-eyebrow">eThekwini Municipality</span>
-          <h1>Book community venues across Durban</h1>
-          <p className="hero-subtitle">
-            Find and reserve halls, sports fields, parks, and swimming pools
-            for your next event, match, or gathering.
-          </p>
-          <div className="hero-actions">
-            <Link to="/categories" className="btn-primary btn-lg">Browse all venues</Link>
-            <Link to="/register" className="btn-outline btn-lg">Create free account</Link>
+      <HeroSlideshow>
+        <span className="hero-eyebrow">eThekwini Municipality</span>
+        <h1>Book community venues across Durban</h1>
+        <p className="hero-subtitle">
+          Find and reserve halls, sports fields, parks, and swimming pools
+          for your next event, match, or gathering.
+        </p>
+        <div className="hero-actions">
+          <Link to="/categories" className="btn-primary btn-lg">Browse all venues</Link>
+          <Link to="/register" className="btn-outline btn-lg">Create free account</Link>
+        </div>
+        <div className="hero-stats">
+          <div className="hero-stat">
+            <span className="hero-stat-num">{featuredVenues.length}+</span>
+            <span className="hero-stat-label">Venues</span>
           </div>
-          <div className="hero-stats">
-            <div className="hero-stat">
-              <span className="hero-stat-num">{featuredVenues.length}+</span>
-              <span className="hero-stat-label">Venues</span>
-            </div>
-            <div className="hero-stat-divider" />
-            <div className="hero-stat">
-              <span className="hero-stat-num">{categories.length}</span>
-              <span className="hero-stat-label">Categories</span>
-            </div>
-            <div className="hero-stat-divider" />
-            <div className="hero-stat">
-              <span className="hero-stat-num">24/7</span>
-              <span className="hero-stat-label">Online booking</span>
-            </div>
+          <div className="hero-stat-divider" />
+          <div className="hero-stat">
+            <span className="hero-stat-num">{categories.length}</span>
+            <span className="hero-stat-label">Categories</span>
+          </div>
+          <div className="hero-stat-divider" />
+          <div className="hero-stat">
+            <span className="hero-stat-num">24/7</span>
+            <span className="hero-stat-label">Online booking</span>
           </div>
         </div>
-      </section>
+      </HeroSlideshow>
 
       {/* ── Categories ───────────────────────────── */}
       <section className="section">
