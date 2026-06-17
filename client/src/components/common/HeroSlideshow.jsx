@@ -7,14 +7,14 @@ const SLIDES = [
     caption: "Durban skyline from North Beach",
   },
   {
-    url: "https://images.unsplash.com/photo-1586953208270-767889fa9b0f?w=1600&q=80",
+    url: "https://images.unsplash.com/photo-1477901701740-5304fcfcb7fa?w=1600&q=80",
     credit: "Jason Briscoe",
     caption: "Durban beachfront aerial view",
   },
   {
-    url: "https://images.unsplash.com/photo-1599662875272-64de8f576280?w=1600&q=80",
+    url: "https://images.unsplash.com/photo-1550761717-d03b44d9cb33?w=1600&q=80",
     credit: "Marlin Clark",
-    caption: "Moses Mabhida Stadium, Durban",
+    caption: "Durban North Beach at sunset",
   },
 ];
 

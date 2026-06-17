@@ -7,11 +7,48 @@ const createBooking = async (req, res, next) => {
       req.body;
 
     // Verify venue exists
-    const venue = await prisma.venue.findUnique({ where: { id: venueId } });
+    const venue = await prisma.venue.findUnique({
+      where: { id: venueId },
+      include: { operatingHours: true },
+    });
     if (!venue || !venue.isActive) {
       return res.status(404).json({
         success: false,
         message: "Venue not found.",
+      });
+    }
+
+    // Validate start time is before end time
+    if (startTime >= endTime) {
+      return res.status(400).json({
+        success: false,
+        message: "End time must be after start time.",
+      });
+    }
+
+    // Validate against operating hours
+    const requestedDate = new Date(bookingDate);
+    const days = [
+      "SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY",
+      "THURSDAY", "FRIDAY", "SATURDAY",
+    ];
+    const dayOfWeek = days[requestedDate.getDay()];
+
+    const operatingHour = venue.operatingHours.find(
+      (oh) => oh.dayOfWeek === dayOfWeek
+    );
+
+    if (!operatingHour || operatingHour.isClosed) {
+      return res.status(400).json({
+        success: false,
+        message: `This venue is closed on ${dayOfWeek.charAt(0) + dayOfWeek.slice(1).toLowerCase()}s.`,
+      });
+    }
+
+    if (startTime < operatingHour.openTime || endTime > operatingHour.closeTime) {
+      return res.status(400).json({
+        success: false,
+        message: `Booking must be within operating hours: ${operatingHour.openTime} – ${operatingHour.closeTime}.`,
       });
     }
 

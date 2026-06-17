@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../../api/client";
 import toast from "react-hot-toast";
@@ -23,12 +23,35 @@ export default function BookingPage() {
 
   const handleDateChange = (e) => {
     const date = e.target.value;
-    setForm({ ...form, bookingDate: date });
+    setForm({ ...form, bookingDate: date, startTime: "", endTime: "" });
     checkAvailability(date);
   };
 
+  // Client-side time validation
+  const timeError = useMemo(() => {
+    if (!form.startTime || !form.endTime || !availability) return null;
+    if (availability.isClosed) return "Venue is closed on this day.";
+    if (form.startTime >= form.endTime) return "End time must be after start time.";
+    if (form.startTime < availability.openTime) return `Start time cannot be before ${availability.openTime}.`;
+    if (form.endTime > availability.closeTime) return `End time cannot be after ${availability.closeTime}.`;
+    return null;
+  }, [form.startTime, form.endTime, availability]);
+
+  // Calculate estimated cost
+  const estimatedCost = useMemo(() => {
+    if (!form.startTime || !form.endTime || !venue || timeError) return null;
+    const [sh, sm] = form.startTime.split(":").map(Number);
+    const [eh, em] = form.endTime.split(":").map(Number);
+    const hours = (eh - sh) + (em - sm) / 60;
+    if (hours <= 0) return null;
+    return (hours * venue.pricePerHour).toFixed(2);
+  }, [form.startTime, form.endTime, venue, timeError]);
+
+  const canSubmit = form.bookingDate && form.startTime && form.endTime && !timeError && !availability?.isClosed;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!canSubmit) return;
     setLoading(true);
     try {
       await api.post("/bookings", { ...form, venueId: venue.id });
@@ -53,7 +76,7 @@ export default function BookingPage() {
         <input type="date" required value={form.bookingDate} onChange={handleDateChange} min={new Date().toISOString().split("T")[0]} />
 
         {availability && !availability.isClosed && (
-          <p className="availability-info">Open: {availability.openTime} - {availability.closeTime}</p>
+          <p className="availability-info">Open: {availability.openTime} – {availability.closeTime}</p>
         )}
         {availability?.isClosed && <p className="availability-closed">Venue is closed on this day.</p>}
 
@@ -61,15 +84,41 @@ export default function BookingPage() {
           <div className="booked-slots">
             <p>Already booked:</p>
             {availability.bookedSlots.map((s, i) => (
-              <span key={i} className="tag">{s.startTime} - {s.endTime} ({s.status})</span>
+              <span key={i} className="tag">{s.startTime} – {s.endTime} ({s.status})</span>
             ))}
           </div>
         )}
 
         <div className="form-row">
-          <div><label>Start time</label><input type="time" required value={form.startTime} onChange={(e) => setForm({ ...form, startTime: e.target.value })} /></div>
-          <div><label>End time</label><input type="time" required value={form.endTime} onChange={(e) => setForm({ ...form, endTime: e.target.value })} /></div>
+          <div>
+            <label>Start time</label>
+            <input
+              type="time"
+              required
+              value={form.startTime}
+              onChange={(e) => setForm({ ...form, startTime: e.target.value })}
+              min={availability?.openTime}
+              max={availability?.closeTime}
+            />
+          </div>
+          <div>
+            <label>End time</label>
+            <input
+              type="time"
+              required
+              value={form.endTime}
+              onChange={(e) => setForm({ ...form, endTime: e.target.value })}
+              min={form.startTime || availability?.openTime}
+              max={availability?.closeTime}
+            />
+          </div>
         </div>
+
+        {timeError && <p className="availability-closed">{timeError}</p>}
+
+        {estimatedCost && !timeError && (
+          <p className="estimated-cost">Estimated cost: <strong>R{estimatedCost}</strong></p>
+        )}
 
         <label>Purpose</label>
         <input value={form.purpose} onChange={(e) => setForm({ ...form, purpose: e.target.value })} placeholder="e.g. Birthday party, league match" />
@@ -77,7 +126,7 @@ export default function BookingPage() {
         <label>Additional notes</label>
         <textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={3} />
 
-        <button type="submit" className="btn-primary" disabled={loading || availability?.isClosed}>
+        <button type="submit" className="btn-primary" disabled={loading || !canSubmit}>
           {loading ? "Submitting..." : "Submit booking request"}
         </button>
       </form>
