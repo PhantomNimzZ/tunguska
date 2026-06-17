@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../../api/client";
+import BackNav from "../../components/common/BackNav";
 import toast from "react-hot-toast";
 
 export default function BookingPage() {
@@ -68,6 +69,11 @@ export default function BookingPage() {
 
   return (
     <div className="page">
+      <BackNav links={[
+        { label: "Venues", to: "/categories" },
+        { label: venue.name, to: `/venue/${venue.slug}` },
+        { label: "Book" },
+      ]} />
       <h1>Book {venue.name}</h1>
       <p className="venue-price">R{venue.pricePerHour} per hour</p>
 

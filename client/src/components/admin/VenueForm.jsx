@@ -90,10 +90,21 @@ export default function VenueForm({ venue, onSave, onCancel }) {
     }
   }, [venue]);
 
-  // Auto-generate slug from name
+  const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
+
+  // Auto-generate slug from name (unless user has manually edited the slug)
   const updateName = (name) => {
-    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-    setForm((prev) => ({ ...prev, name, slug: isEdit ? prev.slug : slug }));
+    if (!slugManuallyEdited) {
+      const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+      setForm((prev) => ({ ...prev, name, slug }));
+    } else {
+      setForm((prev) => ({ ...prev, name }));
+    }
+  };
+
+  const updateSlug = (slug) => {
+    setSlugManuallyEdited(true);
+    setForm((prev) => ({ ...prev, slug }));
   };
 
   const toggleAmenity = (amenity) => {
@@ -161,7 +172,7 @@ export default function VenueForm({ venue, onSave, onCancel }) {
         <label>URL slug</label>
         <input
           value={form.slug}
-          onChange={(e) => setForm({ ...form, slug: e.target.value })}
+          onChange={(e) => updateSlug(e.target.value)}
           placeholder="auto-generated-from-name"
         />
 

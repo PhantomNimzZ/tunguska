@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import api from "../../api/client";
+import BackNav from "../../components/common/BackNav";
 
 const DAY_ORDER = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"];
 const DAY_SHORT = { MONDAY: "Mon", TUESDAY: "Tue", WEDNESDAY: "Wed", THURSDAY: "Thu", FRIDAY: "Fri", SATURDAY: "Sat", SUNDAY: "Sun" };
@@ -21,8 +22,19 @@ export default function VenueDetailPage() {
     ? DAY_ORDER.map((day) => venue.operatingHours.find((h) => h.dayOfWeek === day)).filter(Boolean)
     : [];
 
+  // Build breadcrumbs
+  const breadcrumbs = [{ label: "Venues", to: "/categories" }];
+  if (venue.category) {
+    breadcrumbs.push({ label: venue.category.name, to: `/venues/${venue.category.slug}` });
+  }
+  if (venue.sportType) {
+    breadcrumbs.push({ label: venue.sportType.name, to: `/venues/${venue.category?.slug}/${venue.sportType.slug}` });
+  }
+  breadcrumbs.push({ label: venue.name });
+
   return (
     <div className="page venue-detail-page">
+      <BackNav links={breadcrumbs} />
       {/* Image gallery */}
       {venue.images?.length > 0 && (
         <div className="venue-detail-gallery">

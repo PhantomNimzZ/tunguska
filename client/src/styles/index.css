@@ -52,6 +52,60 @@ a { color: var(--primary); text-decoration: none; }
   padding: 2rem 1.5rem;
 }
 
+/* ── Back navigation & breadcrumbs ────────────── */
+
+.back-nav {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.back-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0;
+  font-size: 0.85rem;
+}
+
+.breadcrumb {
+  color: var(--text-muted);
+  transition: color 0.2s;
+}
+
+a.breadcrumb:hover { color: var(--primary); }
+
+.breadcrumb.current {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.breadcrumb-sep {
+  margin: 0 0.4rem;
+  color: var(--border);
+}
+
 /* ── Header ─────────────────────────────────────── */
 
 .header {
