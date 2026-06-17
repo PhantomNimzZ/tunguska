@@ -388,7 +388,7 @@ export default function AdminBookingsPage() {
               <label>Email *</label>
               <input type="email" required value={newUserForm.email} onChange={(e) => setNewUserForm({ ...newUserForm, email: e.target.value })} />
               <label>Phone</label>
-              <input type="tel" value={newUserForm.phone} onChange={(e) => setNewUserForm({ ...newUserForm, phone: e.target.value })} />
+              <input type="tel" value={newUserForm.phone} onChange={(e) => setNewUserForm({ ...newUserForm, phone: e.target.value })} placeholder="0XX XXX XXXX" pattern="^(\+27|0)[0-9\s\-]{9,12}$" title="South African phone number: 0XX XXX XXXX or +27XX XXX XXXX" />
               <button type="button" className="btn-primary btn-sm" onClick={createNewUser} disabled={creatingUser} style={{ marginTop: "0.75rem" }}>
                 {creatingUser ? "Creating..." : "Create user & select"}
               </button>

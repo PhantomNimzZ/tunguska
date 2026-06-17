@@ -34,7 +34,7 @@ export default function RegisterPage() {
           <label>Email</label>
           <input type="email" required value={form.email} onChange={update("email")} />
           <label>Phone</label>
-          <input type="tel" value={form.phone} onChange={update("phone")} />
+          <input type="tel" value={form.phone} onChange={update("phone")} placeholder="0XX XXX XXXX" pattern="^(\+27|0)[0-9\s\-]{9,12}$" title="South African phone number: 0XX XXX XXXX or +27XX XXX XXXX" />
           <label>Password</label>
           <input type="password" required minLength={6} value={form.password} onChange={update("password")} />
           <button type="submit" className="btn-primary" disabled={loading}>{loading ? "Creating..." : "Sign up"}</button>

@@ -1,5 +1,6 @@
 const bcrypt = require("bcryptjs");
 const prisma = require("../config/db");
+const validate = require("../utils/validate");
 
 // ── USERS ────────────────────────────────────────────────────
 
@@ -44,16 +45,35 @@ const getUsers = async (req, res, next) => {
 // PATCH /api/admin/users/:id
 const updateUser = async (req, res, next) => {
   try {
-    const { firstName, lastName, phone, role, isActive } = req.body;
+    const { firstName, lastName, email, phone, role, isActive } = req.body;
+
+    // Validate
+    const error = validate.run(
+      firstName ? null : null, // optional on update
+      email ? validate.email(email) : null,
+      validate.phone(phone),
+    );
+    if (error) return res.status(400).json({ success: false, message: error });
+
+    // Check email uniqueness if changing
+    if (email) {
+      const existing = await prisma.user.findFirst({
+        where: { email, id: { not: req.params.id } },
+      });
+      if (existing) {
+        return res.status(409).json({ success: false, message: "This email is already in use by another account." });
+      }
+    }
 
     const user = await prisma.user.update({
       where: { id: req.params.id },
-      data: { firstName, lastName, phone, role, isActive },
+      data: { firstName, lastName, email, phone, role, isActive },
       select: {
         id: true,
         email: true,
         firstName: true,
         lastName: true,
+        phone: true,
         role: true,
         isActive: true,
       },
@@ -70,6 +90,15 @@ const createUser = async (req, res, next) => {
   try {
     const { firstName, lastName, email, phone } = req.body;
 
+    // Validate
+    const error = validate.run(
+      validate.required(firstName, "First name"),
+      validate.required(lastName, "Last name"),
+      validate.email(email),
+      validate.phone(phone),
+    );
+    if (error) return res.status(400).json({ success: false, message: error });
+
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
       return res.status(409).json({
@@ -78,15 +107,14 @@ const createUser = async (req, res, next) => {
       });
     }
 
-    // Generate a temporary password (admin-created accounts)
     const tempPassword = await bcrypt.hash("welcome123", 12);
 
     const user = await prisma.user.create({
       data: {
-        firstName,
-        lastName,
-        email,
-        phone,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email: email.trim().toLowerCase(),
+        phone: phone ? phone.replace(/[\s\-()]/g, "") : null,
         passwordHash: tempPassword,
         role: "USER",
       },
@@ -135,6 +163,17 @@ const createVenue = async (req, res, next) => {
       capacity, pricePerHour, amenities, rules, categoryId, sportTypeId,
       operatingHours,
     } = req.body;
+
+    const error = validate.run(
+      validate.required(name, "Venue name"),
+      validate.required(slug, "URL slug"),
+      validate.required(address, "Address"),
+      validate.required(categoryId, "Category"),
+      validate.required(pricePerHour, "Price per hour"),
+      validate.positiveNumber(pricePerHour, "Price per hour"),
+      validate.positiveNumber(capacity, "Capacity"),
+    );
+    if (error) return res.status(400).json({ success: false, message: error });
 
     const venue = await prisma.venue.create({
       data: {
@@ -383,8 +422,16 @@ const updatePaymentStatus = async (req, res, next) => {
 const createCategory = async (req, res, next) => {
   try {
     const { name, slug, description, icon, sortOrder } = req.body;
+
+    const error = validate.run(
+      validate.required(name, "Category name"),
+      validate.required(slug, "URL slug"),
+      validate.slug(slug),
+    );
+    if (error) return res.status(400).json({ success: false, message: error });
+
     const category = await prisma.venueCategory.create({
-      data: { name, slug, description, icon, sortOrder },
+      data: { name: name.trim(), slug, description, icon, sortOrder },
     });
     res.status(201).json({ success: true, data: category });
   } catch (error) {
@@ -398,7 +445,7 @@ const updateCategory = async (req, res, next) => {
     const { name, slug, description, icon, sortOrder, isActive } = req.body;
     const category = await prisma.venueCategory.update({
       where: { id: req.params.id },
-      data: { name, slug, description, icon, sortOrder, isActive },
+      data: { name: name?.trim(), slug, description, icon, sortOrder, isActive },
     });
     res.json({ success: true, data: category });
   } catch (error) {
@@ -410,8 +457,17 @@ const updateCategory = async (req, res, next) => {
 const createSportType = async (req, res, next) => {
   try {
     const { name, slug, description, icon, sortOrder, categoryId } = req.body;
+
+    const error = validate.run(
+      validate.required(name, "Sport type name"),
+      validate.required(slug, "URL slug"),
+      validate.slug(slug),
+      validate.required(categoryId, "Category"),
+    );
+    if (error) return res.status(400).json({ success: false, message: error });
+
     const sportType = await prisma.sportType.create({
-      data: { name, slug, description, icon, sortOrder, categoryId },
+      data: { name: name.trim(), slug, description, icon, sortOrder, categoryId },
     });
     res.status(201).json({ success: true, data: sportType });
   } catch (error) {
@@ -425,7 +481,7 @@ const updateSportType = async (req, res, next) => {
     const { name, slug, description, icon, sortOrder, isActive } = req.body;
     const sportType = await prisma.sportType.update({
       where: { id: req.params.id },
-      data: { name, slug, description, icon, sortOrder, isActive },
+      data: { name: name?.trim(), slug, description, icon, sortOrder, isActive },
     });
     res.json({ success: true, data: sportType });
   } catch (error) {

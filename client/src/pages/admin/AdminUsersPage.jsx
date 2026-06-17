@@ -9,9 +9,13 @@ export default function AdminUsersPage() {
   const [roleFilter, setRoleFilter] = useState("");
   const [editingUser, setEditingUser] = useState(null);
   const [showEdit, setShowEdit] = useState(false);
+  const [showCreate, setShowCreate] = useState(false);
+  const [creatingUser, setCreatingUser] = useState(false);
+  const [createForm, setCreateForm] = useState({ firstName: "", lastName: "", email: "", phone: "" });
   const [editForm, setEditForm] = useState({
     firstName: "",
     lastName: "",
+    email: "",
     phone: "",
     role: "USER",
     isActive: true,
@@ -31,6 +35,7 @@ export default function AdminUsersPage() {
     setEditForm({
       firstName: user.firstName,
       lastName: user.lastName,
+      email: user.email,
       phone: user.phone || "",
       role: user.role,
       isActive: user.isActive,
@@ -64,10 +69,27 @@ export default function AdminUsersPage() {
     }
   };
 
+  const handleCreateUser = async (e) => {
+    e.preventDefault();
+    setCreatingUser(true);
+    try {
+      await api.post("/admin/users", createForm);
+      toast.success("User account created with temporary password.");
+      setShowCreate(false);
+      setCreateForm({ firstName: "", lastName: "", email: "", phone: "" });
+      fetchUsers();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to create user.");
+    } finally {
+      setCreatingUser(false);
+    }
+  };
+
   return (
     <div className="admin-page">
       <div className="admin-page-header">
         <h1>Users</h1>
+        <button className="btn-primary" onClick={() => setShowCreate(true)}>+ Create user</button>
       </div>
 
       <div className="admin-filters">
@@ -145,7 +167,7 @@ export default function AdminUsersPage() {
         <form onSubmit={handleSave} className="admin-form">
           <div className="form-row">
             <div>
-              <label>First name</label>
+              <label>First name *</label>
               <input
                 required
                 value={editForm.firstName}
@@ -153,7 +175,7 @@ export default function AdminUsersPage() {
               />
             </div>
             <div>
-              <label>Last name</label>
+              <label>Last name *</label>
               <input
                 required
                 value={editForm.lastName}
@@ -162,10 +184,22 @@ export default function AdminUsersPage() {
             </div>
           </div>
 
+          <label>Email *</label>
+          <input
+            type="email"
+            required
+            value={editForm.email}
+            onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+          />
+
           <label>Phone</label>
           <input
+            type="tel"
             value={editForm.phone}
             onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+            placeholder="0XX XXX XXXX"
+            pattern="^(\+27|0)[0-9\s\-]{9,12}$"
+            title="South African phone number: 0XX XXX XXXX or +27XX XXX XXXX"
           />
 
           <label>Role</label>
@@ -189,6 +223,48 @@ export default function AdminUsersPage() {
           <div className="form-actions">
             <button type="button" className="btn-secondary" onClick={() => { setShowEdit(false); setEditingUser(null); }}>Cancel</button>
             <button type="submit" className="btn-primary">Save changes</button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Create user modal */}
+      <Modal
+        isOpen={showCreate}
+        onClose={() => setShowCreate(false)}
+        title="Create new user"
+      >
+        <form onSubmit={handleCreateUser} className="admin-form">
+          <div className="form-row">
+            <div>
+              <label>First name *</label>
+              <input required value={createForm.firstName} onChange={(e) => setCreateForm({ ...createForm, firstName: e.target.value })} />
+            </div>
+            <div>
+              <label>Last name *</label>
+              <input required value={createForm.lastName} onChange={(e) => setCreateForm({ ...createForm, lastName: e.target.value })} />
+            </div>
+          </div>
+
+          <label>Email *</label>
+          <input type="email" required value={createForm.email} onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })} />
+
+          <label>Phone</label>
+          <input
+            type="tel"
+            value={createForm.phone}
+            onChange={(e) => setCreateForm({ ...createForm, phone: e.target.value })}
+            placeholder="0XX XXX XXXX"
+            pattern="^(\+27|0)[0-9\s\-]{9,12}$"
+            title="South African phone number: 0XX XXX XXXX or +27XX XXX XXXX"
+          />
+
+          <p className="form-note">The account will be created with a temporary password: <strong>welcome123</strong></p>
+
+          <div className="form-actions">
+            <button type="button" className="btn-secondary" onClick={() => setShowCreate(false)}>Cancel</button>
+            <button type="submit" className="btn-primary" disabled={creatingUser}>
+              {creatingUser ? "Creating..." : "Create user"}
+            </button>
           </div>
         </form>
       </Modal>

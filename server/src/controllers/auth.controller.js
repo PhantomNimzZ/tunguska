@@ -1,6 +1,7 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const prisma = require("../config/db");
+const validate = require("../utils/validate");
 
 const generateTokens = (userId) => {
   const accessToken = jwt.sign({ userId }, process.env.JWT_SECRET, {
@@ -17,7 +18,20 @@ const register = async (req, res, next) => {
   try {
     const { email, password, firstName, lastName, phone } = req.body;
 
-    const existingUser = await prisma.user.findUnique({ where: { email } });
+    const error = validate.run(
+      validate.required(firstName, "First name"),
+      validate.required(lastName, "Last name"),
+      validate.email(email),
+      validate.required(password, "Password"),
+      validate.phone(phone),
+    );
+    if (error) return res.status(400).json({ success: false, message: error });
+
+    if (password.length < 6) {
+      return res.status(400).json({ success: false, message: "Password must be at least 6 characters." });
+    }
+
+    const existingUser = await prisma.user.findUnique({ where: { email: email.trim().toLowerCase() } });
     if (existingUser) {
       return res.status(409).json({
         success: false,
@@ -28,7 +42,13 @@ const register = async (req, res, next) => {
     const passwordHash = await bcrypt.hash(password, 12);
 
     const user = await prisma.user.create({
-      data: { email, passwordHash, firstName, lastName, phone },
+      data: {
+        email: email.trim().toLowerCase(),
+        passwordHash,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        phone: phone ? phone.replace(/[\s\-()]/g, "") : null,
+      },
       select: {
         id: true,
         email: true,
