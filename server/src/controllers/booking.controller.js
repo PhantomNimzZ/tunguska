@@ -39,17 +39,6 @@ const createBooking = async (req, res, next) => {
       });
     }
 
-    // If booking is for today, ensure start time is in the future
-    if (requestedDateStr === todayStr) {
-      const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
-      if (startTime <= currentTime) {
-        return res.status(400).json({
-          success: false,
-          message: `Start time must be after the current time (${currentTime}).`,
-        });
-      }
-    }
-
     // Validate against operating hours
     const days = [
       "SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY",
@@ -73,6 +62,25 @@ const createBooking = async (req, res, next) => {
         success: false,
         message: `Booking must be within operating hours: ${operatingHour.openTime} – ${operatingHour.closeTime}.`,
       });
+    }
+
+    // If booking is for today, ensure start time is not in the past
+    if (requestedDateStr === todayStr) {
+      const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+
+      if (currentTime >= operatingHour.closeTime) {
+        return res.status(400).json({
+          success: false,
+          message: "This venue is closed for today — operating hours have passed.",
+        });
+      }
+
+      if (currentTime > operatingHour.openTime && startTime <= currentTime) {
+        return res.status(400).json({
+          success: false,
+          message: `Start time must be after ${currentTime} for same-day bookings.`,
+        });
+      }
     }
 
     // Check for conflicting bookings

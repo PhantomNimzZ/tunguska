@@ -25,6 +25,24 @@ export default function BookingPage() {
 
   const isToday = form.bookingDate === today;
 
+  // The earliest bookable time: only use current time if it's today AND we're within operating hours
+  const earliestTime = useMemo(() => {
+    if (!availability || availability.isClosed) return availability?.openTime || "08:00";
+    const openTime = availability.openTime;
+    const closeTime = availability.closeTime;
+
+    if (!isToday) return openTime;
+
+    // If current time is before opening, earliest is opening time
+    if (currentTime < openTime) return openTime;
+    // If current time is after closing, venue is done for today
+    if (currentTime >= closeTime) return null;
+    // Current time is within operating hours — use it as the floor
+    return currentTime;
+  }, [isToday, currentTime, availability]);
+
+  const venueDoneForToday = isToday && earliestTime === null;
+
   useEffect(() => {
     api.get(`/venues/${slug}`).then(({ data }) => setVenue(data.data));
   }, [slug]);
@@ -45,12 +63,13 @@ export default function BookingPage() {
   const timeError = useMemo(() => {
     if (!form.startTime || !form.endTime || !availability) return null;
     if (availability.isClosed) return "Venue is closed on this day.";
+    if (venueDoneForToday) return "Venue is closed for today — operating hours have passed.";
     if (form.startTime >= form.endTime) return "End time must be after start time.";
     if (form.startTime < availability.openTime) return `Start time cannot be before ${availability.openTime}.`;
     if (form.endTime > availability.closeTime) return `End time cannot be after ${availability.closeTime}.`;
-    if (isToday && form.startTime <= currentTime) return `Start time must be after the current time (${currentTime}).`;
+    if (earliestTime && form.startTime < earliestTime) return `Start time must be ${earliestTime} or later.`;
     return null;
-  }, [form.startTime, form.endTime, availability, isToday, currentTime]);
+  }, [form.startTime, form.endTime, availability, earliestTime, venueDoneForToday]);
 
   // Calculate estimated cost
   const estimatedCost = useMemo(() => {
@@ -62,7 +81,7 @@ export default function BookingPage() {
     return (hours * venue.pricePerHour).toFixed(2);
   }, [form.startTime, form.endTime, venue, timeError]);
 
-  const canSubmit = form.bookingDate && form.startTime && form.endTime && !timeError && !availability?.isClosed;
+  const canSubmit = form.bookingDate && form.startTime && form.endTime && !timeError && !availability?.isClosed && !venueDoneForToday;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -95,13 +114,16 @@ export default function BookingPage() {
         <label>Date</label>
         <input type="date" required value={form.bookingDate} onChange={handleDateChange} min={today} />
 
-        {availability && !availability.isClosed && (
+        {availability && !availability.isClosed && !venueDoneForToday && (
           <p className="availability-info">
             Open: {availability.openTime} – {availability.closeTime}
-            {isToday && <span> · Booking from {currentTime} onwards</span>}
+            {isToday && earliestTime > availability.openTime && (
+              <span> · Available from {earliestTime} onwards</span>
+            )}
           </p>
         )}
         {availability?.isClosed && <p className="availability-closed">Venue is closed on this day.</p>}
+        {venueDoneForToday && <p className="availability-closed">Venue is closed for today — operating hours have passed.</p>}
 
         {availability?.bookedSlots?.length > 0 && (
           <div className="booked-slots">
@@ -120,7 +142,7 @@ export default function BookingPage() {
               required
               value={form.startTime}
               onChange={(e) => setForm({ ...form, startTime: e.target.value })}
-              min={isToday && currentTime > (availability?.openTime || "00:00") ? currentTime : availability?.openTime}
+              min={earliestTime || availability?.openTime}
               max={availability?.closeTime}
             />
           </div>
