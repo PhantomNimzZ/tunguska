@@ -10,8 +10,18 @@ export default function AdminBookingsPage() {
   const [search, setSearch] = useState("");
   const [showPayment, setShowPayment] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
+  const [showCreate, setShowCreate] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [paymentForm, setPaymentForm] = useState({ status: "PAID", method: "", reference: "" });
+
+  // Create booking form state
+  const [users, setUsers] = useState([]);
+  const [venues, setVenues] = useState([]);
+  const [createForm, setCreateForm] = useState({
+    userId: "", venueId: "", bookingDate: "", startTime: "", endTime: "",
+    purpose: "", notes: "", status: "APPROVED",
+  });
+  const [creating, setCreating] = useState(false);
 
   const fetchBookings = () => {
     const params = filter ? { status: filter } : {};
@@ -74,10 +84,44 @@ export default function AdminBookingsPage() {
     }
   };
 
+  const openCreateBooking = async () => {
+    try {
+      const [usersRes, venuesRes] = await Promise.all([
+        api.get("/admin/users"),
+        api.get("/admin/venues"),
+      ]);
+      setUsers(usersRes.data.data.filter((u) => u.isActive));
+      setVenues(venuesRes.data.data.filter((v) => v.isActive));
+      setCreateForm({
+        userId: "", venueId: "", bookingDate: "", startTime: "", endTime: "",
+        purpose: "", notes: "", status: "APPROVED",
+      });
+      setShowCreate(true);
+    } catch {
+      toast.error("Failed to load users and venues.");
+    }
+  };
+
+  const submitCreateBooking = async (e) => {
+    e.preventDefault();
+    setCreating(true);
+    try {
+      await api.post("/admin/bookings", createForm);
+      toast.success("Booking created.");
+      setShowCreate(false);
+      fetchBookings();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to create booking.");
+    } finally {
+      setCreating(false);
+    }
+  };
+
   return (
     <div className="admin-page">
       <div className="admin-page-header">
         <h1>Bookings</h1>
+        <button className="btn-primary" onClick={openCreateBooking}>+ Create booking</button>
       </div>
 
       <div className="admin-filters">
@@ -207,6 +251,98 @@ export default function AdminBookingsPage() {
             </div>
           </form>
         )}
+      </Modal>
+
+      {/* Create booking modal */}
+      <Modal
+        isOpen={showCreate}
+        onClose={() => setShowCreate(false)}
+        title="Create booking"
+      >
+        <form onSubmit={submitCreateBooking} className="admin-form">
+          <label>User *</label>
+          <select
+            required
+            value={createForm.userId}
+            onChange={(e) => setCreateForm({ ...createForm, userId: e.target.value })}
+          >
+            <option value="">Select user</option>
+            {users.map((u) => (
+              <option key={u.id} value={u.id}>{u.firstName} {u.lastName} ({u.email})</option>
+            ))}
+          </select>
+
+          <label>Venue *</label>
+          <select
+            required
+            value={createForm.venueId}
+            onChange={(e) => setCreateForm({ ...createForm, venueId: e.target.value })}
+          >
+            <option value="">Select venue</option>
+            {venues.map((v) => (
+              <option key={v.id} value={v.id}>{v.name} — R{v.pricePerHour}/hr</option>
+            ))}
+          </select>
+
+          <label>Date *</label>
+          <input
+            type="date"
+            required
+            value={createForm.bookingDate}
+            onChange={(e) => setCreateForm({ ...createForm, bookingDate: e.target.value })}
+          />
+
+          <div className="form-row">
+            <div>
+              <label>Start time *</label>
+              <input
+                type="time"
+                required
+                value={createForm.startTime}
+                onChange={(e) => setCreateForm({ ...createForm, startTime: e.target.value })}
+              />
+            </div>
+            <div>
+              <label>End time *</label>
+              <input
+                type="time"
+                required
+                value={createForm.endTime}
+                onChange={(e) => setCreateForm({ ...createForm, endTime: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <label>Status</label>
+          <select
+            value={createForm.status}
+            onChange={(e) => setCreateForm({ ...createForm, status: e.target.value })}
+          >
+            <option value="APPROVED">Approved</option>
+            <option value="PENDING">Pending</option>
+          </select>
+
+          <label>Purpose</label>
+          <input
+            value={createForm.purpose}
+            onChange={(e) => setCreateForm({ ...createForm, purpose: e.target.value })}
+            placeholder="e.g. Community event, league match"
+          />
+
+          <label>Notes</label>
+          <textarea
+            rows={2}
+            value={createForm.notes}
+            onChange={(e) => setCreateForm({ ...createForm, notes: e.target.value })}
+          />
+
+          <div className="form-actions">
+            <button type="button" className="btn-secondary" onClick={() => setShowCreate(false)}>Cancel</button>
+            <button type="submit" className="btn-primary" disabled={creating}>
+              {creating ? "Creating..." : "Create booking"}
+            </button>
+          </div>
+        </form>
       </Modal>
     </div>
   );

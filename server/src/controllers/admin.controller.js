@@ -206,6 +206,69 @@ const getAllBookings = async (req, res, next) => {
   }
 };
 
+// POST /api/admin/bookings
+const createBookingAsAdmin = async (req, res, next) => {
+  try {
+    const { userId, venueId, bookingDate, startTime, endTime, purpose, notes, status } = req.body;
+
+    const venue = await prisma.venue.findUnique({
+      where: { id: venueId },
+      include: { operatingHours: true },
+    });
+    if (!venue) {
+      return res.status(404).json({ success: false, message: "Venue not found." });
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found." });
+    }
+
+    if (startTime >= endTime) {
+      return res.status(400).json({ success: false, message: "End time must be after start time." });
+    }
+
+    // Calculate total amount
+    const [startH, startM] = startTime.split(":").map(Number);
+    const [endH, endM] = endTime.split(":").map(Number);
+    const durationHours = endH - startH + (endM - startM) / 60;
+    const totalAmount = Math.round(durationHours * venue.pricePerHour * 100) / 100;
+
+    const booking = await prisma.booking.create({
+      data: {
+        bookingDate: new Date(bookingDate),
+        startTime,
+        endTime,
+        totalAmount,
+        purpose,
+        notes,
+        status: status || "APPROVED",
+        userId,
+        venueId,
+        payment: {
+          create: {
+            amount: totalAmount,
+            status: "UNPAID",
+          },
+        },
+      },
+      include: {
+        user: { select: { id: true, firstName: true, lastName: true, email: true } },
+        venue: { select: { name: true } },
+        payment: true,
+      },
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Booking created.",
+      data: booking,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // PATCH /api/admin/bookings/:id/approve
 const approveBooking = async (req, res, next) => {
   try {
@@ -440,7 +503,7 @@ const getDashboardStats = async (req, res, next) => {
 module.exports = {
   getUsers, updateUser,
   getAllVenues, createVenue, updateVenue, deleteVenue,
-  getAllBookings, approveBooking, declineBooking, updatePaymentStatus,
+  getAllBookings, createBookingAsAdmin, approveBooking, declineBooking, updatePaymentStatus,
   createCategory, updateCategory, createSportType, updateSportType,
   uploadVenueImage, getVenueImages, setImagePrimary, deleteVenueImage,
   getDashboardStats,

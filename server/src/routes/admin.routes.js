@@ -5,7 +5,7 @@ const { authenticate, authorizeAdmin } = require("../middleware/auth.middleware"
 const {
   getUsers, updateUser,
   getAllVenues, createVenue, updateVenue, deleteVenue,
-  getAllBookings, approveBooking, declineBooking, updatePaymentStatus,
+  getAllBookings, createBookingAsAdmin, approveBooking, declineBooking, updatePaymentStatus,
   createCategory, updateCategory, createSportType, updateSportType,
   uploadVenueImage, getVenueImages, setImagePrimary, deleteVenueImage,
   getDashboardStats,
@@ -56,6 +56,7 @@ router.delete("/venues/:venueId/images/:imageId", deleteVenueImage);
 
 // Bookings
 router.get("/bookings", getAllBookings);
+router.post("/bookings", createBookingAsAdmin);
 router.patch("/bookings/:id/approve", approveBooking);
 router.patch("/bookings/:id/decline", declineBooking);
 router.patch("/bookings/:id/payment", updatePaymentStatus);
