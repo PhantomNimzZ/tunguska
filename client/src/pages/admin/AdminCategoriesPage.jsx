@@ -24,14 +24,12 @@ export default function AdminCategoriesPage() {
 
   const openNewCategory = () => {
     setEditingCat(null);
-    setCatSlugEdited(false);
     setCatForm({ name: "", slug: "", description: "", icon: "", sortOrder: categories.length + 1 });
     setShowCatForm(true);
   };
 
   const openEditCategory = (cat) => {
     setEditingCat(cat);
-    setCatSlugEdited(false);
     setCatForm({
       name: cat.name,
       slug: cat.slug,
@@ -59,27 +57,15 @@ export default function AdminCategoriesPage() {
     }
   };
 
-  const [catSlugEdited, setCatSlugEdited] = useState(false);
-
   const updateCatName = (name) => {
-    if (!catSlugEdited) {
-      const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-      setCatForm((prev) => ({ ...prev, name, slug }));
-    } else {
-      setCatForm((prev) => ({ ...prev, name }));
-    }
-  };
-
-  const updateCatSlug = (slug) => {
-    setCatSlugEdited(true);
-    setCatForm((prev) => ({ ...prev, slug }));
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+    setCatForm((prev) => ({ ...prev, name, slug }));
   };
 
   // ── Sport type handlers ────────────────────────
 
   const openNewSport = (categoryId) => {
     setEditingSport(null);
-    setSportSlugEdited(false);
     const cat = categories.find((c) => c.id === categoryId);
     const count = cat?.sportTypes?.length || 0;
     setSportForm({ name: "", slug: "", description: "", icon: "", sortOrder: count + 1, categoryId });
@@ -88,7 +74,6 @@ export default function AdminCategoriesPage() {
 
   const openEditSport = (sport, categoryId) => {
     setEditingSport(sport);
-    setSportSlugEdited(false);
     setSportForm({
       name: sport.name,
       slug: sport.slug,
@@ -117,20 +102,9 @@ export default function AdminCategoriesPage() {
     }
   };
 
-  const [sportSlugEdited, setSportSlugEdited] = useState(false);
-
   const updateSportName = (name) => {
-    if (!sportSlugEdited) {
-      const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-      setSportForm((prev) => ({ ...prev, name, slug }));
-    } else {
-      setSportForm((prev) => ({ ...prev, name }));
-    }
-  };
-
-  const updateSportSlug = (slug) => {
-    setSportSlugEdited(true);
-    setSportForm((prev) => ({ ...prev, slug }));
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+    setSportForm((prev) => ({ ...prev, name, slug }));
   };
 
   return (
@@ -194,11 +168,9 @@ export default function AdminCategoriesPage() {
             placeholder="e.g. Swimming Pools"
           />
 
-          <label>URL slug</label>
-          <input
-            value={catForm.slug}
-            onChange={(e) => updateCatSlug(e.target.value)}
-          />
+          {catForm.slug && (
+            <p className="slug-preview">URL: /venues/<strong>{catForm.slug}</strong></p>
+          )}
 
           <label>Description</label>
           <textarea
@@ -249,11 +221,9 @@ export default function AdminCategoriesPage() {
             placeholder="e.g. Basketball"
           />
 
-          <label>URL slug</label>
-          <input
-            value={sportForm.slug}
-            onChange={(e) => updateSportSlug(e.target.value)}
-          />
+          {sportForm.slug && (
+            <p className="slug-preview">URL: /venues/sports/<strong>{sportForm.slug}</strong></p>
+          )}
 
           <label>Description</label>
           <textarea

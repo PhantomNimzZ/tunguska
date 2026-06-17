@@ -1893,3 +1893,12 @@ a.breadcrumb:hover { color: var(--primary); }
   font-size: 0.9rem;
   font-weight: 600;
 }
+
+/* ── Slug preview ────────────────────────────── */
+
+.slug-preview {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+  font-family: monospace;
+}
