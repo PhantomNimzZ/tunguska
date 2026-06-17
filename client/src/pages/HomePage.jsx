@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../api/client";
+import { useAuth } from "../context/AuthContext";
 import HeroSlideshow from "../components/common/HeroSlideshow";
 
 export default function HomePage() {
+  const { user } = useAuth();
   const [categories, setCategories] = useState([]);
   const [featuredVenues, setFeaturedVenues] = useState([]);
   const navigate = useNavigate();
@@ -25,7 +27,11 @@ export default function HomePage() {
         </p>
         <div className="hero-actions">
           <Link to="/categories" className="btn-primary btn-lg">Browse all venues</Link>
-          <Link to="/register" className="btn-outline btn-lg">Create free account</Link>
+          {user ? (
+            <Link to="/dashboard" className="btn-outline btn-lg">Go to dashboard</Link>
+          ) : (
+            <Link to="/register" className="btn-outline btn-lg">Create free account</Link>
+          )}
         </div>
         <div className="hero-stats">
           <div className="hero-stat">
@@ -143,9 +149,19 @@ export default function HomePage() {
       {/* ── CTA banner ───────────────────────────── */}
       <section className="cta-banner">
         <div className="section-inner">
-          <h2>Ready to book your venue?</h2>
-          <p>Create a free account and start booking municipal venues across eThekwini today.</p>
-          <Link to="/register" className="btn-primary btn-lg">Get started</Link>
+          {user ? (
+            <>
+              <h2>Ready to book your venue?</h2>
+              <p>Browse available halls, sports fields, and more across eThekwini.</p>
+              <Link to="/categories" className="btn-primary btn-lg">Browse venues</Link>
+            </>
+          ) : (
+            <>
+              <h2>Ready to book your venue?</h2>
+              <p>Create a free account and start booking municipal venues across eThekwini today.</p>
+              <Link to="/register" className="btn-primary btn-lg">Get started</Link>
+            </>
+          )}
         </div>
       </section>
     </div>
