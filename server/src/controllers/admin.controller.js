@@ -65,6 +65,47 @@ const updateUser = async (req, res, next) => {
   }
 };
 
+// POST /api/admin/users
+const createUser = async (req, res, next) => {
+  try {
+    const { firstName, lastName, email, phone } = req.body;
+
+    const existing = await prisma.user.findUnique({ where: { email } });
+    if (existing) {
+      return res.status(409).json({
+        success: false,
+        message: "A user with this email already exists.",
+      });
+    }
+
+    // Generate a temporary password (admin-created accounts)
+    const tempPassword = await bcrypt.hash("welcome123", 12);
+
+    const user = await prisma.user.create({
+      data: {
+        firstName,
+        lastName,
+        email,
+        phone,
+        passwordHash: tempPassword,
+        role: "USER",
+      },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        phone: true,
+        role: true,
+      },
+    });
+
+    res.status(201).json({ success: true, data: user });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // ── VENUES ───────────────────────────────────────────────────
 
 // GET /api/admin/venues
@@ -501,7 +542,7 @@ const getDashboardStats = async (req, res, next) => {
 };
 
 module.exports = {
-  getUsers, updateUser,
+  getUsers, updateUser, createUser,
   getAllVenues, createVenue, updateVenue, deleteVenue,
   getAllBookings, createBookingAsAdmin, approveBooking, declineBooking, updatePaymentStatus,
   createCategory, updateCategory, createSportType, updateSportType,

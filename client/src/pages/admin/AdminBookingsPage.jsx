@@ -14,14 +14,22 @@ export default function AdminBookingsPage() {
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [paymentForm, setPaymentForm] = useState({ status: "PAID", method: "", reference: "" });
 
-  // Create booking form state
-  const [users, setUsers] = useState([]);
+  // Create booking state
   const [venues, setVenues] = useState([]);
   const [createForm, setCreateForm] = useState({
     userId: "", venueId: "", bookingDate: "", startTime: "", endTime: "",
     purpose: "", notes: "", status: "APPROVED",
   });
   const [creating, setCreating] = useState(false);
+
+  // User search state
+  const [userSearch, setUserSearch] = useState("");
+  const [userResults, setUserResults] = useState([]);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [showUserSearch, setShowUserSearch] = useState(false);
+  const [showNewUser, setShowNewUser] = useState(false);
+  const [newUserForm, setNewUserForm] = useState({ firstName: "", lastName: "", email: "", phone: "" });
+  const [creatingUser, setCreatingUser] = useState(false);
 
   const fetchBookings = () => {
     const params = filter ? { status: filter } : {};
@@ -86,24 +94,74 @@ export default function AdminBookingsPage() {
 
   const openCreateBooking = async () => {
     try {
-      const [usersRes, venuesRes] = await Promise.all([
-        api.get("/admin/users"),
-        api.get("/admin/venues"),
-      ]);
-      setUsers(usersRes.data.data.filter((u) => u.isActive));
+      const venuesRes = await api.get("/admin/venues");
       setVenues(venuesRes.data.data.filter((v) => v.isActive));
       setCreateForm({
         userId: "", venueId: "", bookingDate: "", startTime: "", endTime: "",
         purpose: "", notes: "", status: "APPROVED",
       });
+      setSelectedUser(null);
+      setUserSearch("");
+      setUserResults([]);
+      setShowNewUser(false);
       setShowCreate(true);
     } catch {
-      toast.error("Failed to load users and venues.");
+      toast.error("Failed to load venues.");
+    }
+  };
+
+  // Search users as admin types
+  useEffect(() => {
+    if (!userSearch || userSearch.length < 2) {
+      setUserResults([]);
+      return;
+    }
+    const timer = setTimeout(() => {
+      api.get("/admin/users", { params: { search: userSearch } })
+        .then(({ data }) => {
+          setUserResults(data.data.filter((u) => u.isActive).slice(0, 8));
+          setShowUserSearch(true);
+        });
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [userSearch]);
+
+  const selectUser = (user) => {
+    setSelectedUser(user);
+    setCreateForm((prev) => ({ ...prev, userId: user.id }));
+    setUserSearch("");
+    setUserResults([]);
+    setShowUserSearch(false);
+    setShowNewUser(false);
+  };
+
+  const clearSelectedUser = () => {
+    setSelectedUser(null);
+    setCreateForm((prev) => ({ ...prev, userId: "" }));
+    setUserSearch("");
+  };
+
+  const createNewUser = async (e) => {
+    e.preventDefault();
+    setCreatingUser(true);
+    try {
+      const { data } = await api.post("/admin/users", newUserForm);
+      selectUser(data.data);
+      setNewUserForm({ firstName: "", lastName: "", email: "", phone: "" });
+      toast.success("User account created.");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to create user.");
+    } finally {
+      setCreatingUser(false);
     }
   };
 
   const submitCreateBooking = async (e) => {
     e.preventDefault();
+    if (!createForm.userId) {
+      toast.error("Please select or create a user.");
+      return;
+    }
     setCreating(true);
     try {
       await api.post("/admin/bookings", createForm);
@@ -260,17 +318,82 @@ export default function AdminBookingsPage() {
         title="Create booking"
       >
         <form onSubmit={submitCreateBooking} className="admin-form">
+          {/* User selection */}
           <label>User *</label>
-          <select
-            required
-            value={createForm.userId}
-            onChange={(e) => setCreateForm({ ...createForm, userId: e.target.value })}
-          >
-            <option value="">Select user</option>
-            {users.map((u) => (
-              <option key={u.id} value={u.id}>{u.firstName} {u.lastName} ({u.email})</option>
-            ))}
-          </select>
+          {selectedUser ? (
+            <div className="selected-user-chip">
+              <span>{selectedUser.firstName} {selectedUser.lastName} ({selectedUser.email})</span>
+              <button type="button" className="chip-remove" onClick={clearSelectedUser}>✕</button>
+            </div>
+          ) : (
+            <div className="user-search-wrapper">
+              <input
+                type="text"
+                value={userSearch}
+                onChange={(e) => setUserSearch(e.target.value)}
+                placeholder="Search by name or email..."
+                onFocus={() => userResults.length > 0 && setShowUserSearch(true)}
+              />
+              {showUserSearch && userResults.length > 0 && (
+                <div className="user-search-dropdown">
+                  {userResults.map((u) => (
+                    <button
+                      key={u.id}
+                      type="button"
+                      className="user-search-item"
+                      onClick={() => selectUser(u)}
+                    >
+                      <span className="user-search-name">{u.firstName} {u.lastName}</span>
+                      <span className="user-search-email">{u.email}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+              {userSearch.length >= 2 && userResults.length === 0 && !showNewUser && (
+                <p className="user-search-empty">
+                  No users found.{" "}
+                  <button type="button" className="link-btn" onClick={() => setShowNewUser(true)}>
+                    Create new user
+                  </button>
+                </p>
+              )}
+              {!showNewUser && userSearch.length < 2 && (
+                <p className="user-search-hint">
+                  Type at least 2 characters to search, or{" "}
+                  <button type="button" className="link-btn" onClick={() => setShowNewUser(true)}>
+                    create a new user
+                  </button>
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Inline new user form */}
+          {showNewUser && !selectedUser && (
+            <div className="inline-new-user">
+              <div className="inline-new-user-header">
+                <h4>New user</h4>
+                <button type="button" className="link-btn" onClick={() => setShowNewUser(false)}>Cancel</button>
+              </div>
+              <div className="form-row">
+                <div>
+                  <label>First name *</label>
+                  <input required value={newUserForm.firstName} onChange={(e) => setNewUserForm({ ...newUserForm, firstName: e.target.value })} />
+                </div>
+                <div>
+                  <label>Last name *</label>
+                  <input required value={newUserForm.lastName} onChange={(e) => setNewUserForm({ ...newUserForm, lastName: e.target.value })} />
+                </div>
+              </div>
+              <label>Email *</label>
+              <input type="email" required value={newUserForm.email} onChange={(e) => setNewUserForm({ ...newUserForm, email: e.target.value })} />
+              <label>Phone</label>
+              <input type="tel" value={newUserForm.phone} onChange={(e) => setNewUserForm({ ...newUserForm, phone: e.target.value })} />
+              <button type="button" className="btn-primary btn-sm" onClick={createNewUser} disabled={creatingUser} style={{ marginTop: "0.75rem" }}>
+                {creatingUser ? "Creating..." : "Create user & select"}
+              </button>
+            </div>
+          )}
 
           <label>Venue *</label>
           <select
@@ -295,50 +418,29 @@ export default function AdminBookingsPage() {
           <div className="form-row">
             <div>
               <label>Start time *</label>
-              <input
-                type="time"
-                required
-                value={createForm.startTime}
-                onChange={(e) => setCreateForm({ ...createForm, startTime: e.target.value })}
-              />
+              <input type="time" required value={createForm.startTime} onChange={(e) => setCreateForm({ ...createForm, startTime: e.target.value })} />
             </div>
             <div>
               <label>End time *</label>
-              <input
-                type="time"
-                required
-                value={createForm.endTime}
-                onChange={(e) => setCreateForm({ ...createForm, endTime: e.target.value })}
-              />
+              <input type="time" required value={createForm.endTime} onChange={(e) => setCreateForm({ ...createForm, endTime: e.target.value })} />
             </div>
           </div>
 
           <label>Status</label>
-          <select
-            value={createForm.status}
-            onChange={(e) => setCreateForm({ ...createForm, status: e.target.value })}
-          >
+          <select value={createForm.status} onChange={(e) => setCreateForm({ ...createForm, status: e.target.value })}>
             <option value="APPROVED">Approved</option>
             <option value="PENDING">Pending</option>
           </select>
 
           <label>Purpose</label>
-          <input
-            value={createForm.purpose}
-            onChange={(e) => setCreateForm({ ...createForm, purpose: e.target.value })}
-            placeholder="e.g. Community event, league match"
-          />
+          <input value={createForm.purpose} onChange={(e) => setCreateForm({ ...createForm, purpose: e.target.value })} placeholder="e.g. Community event, league match" />
 
           <label>Notes</label>
-          <textarea
-            rows={2}
-            value={createForm.notes}
-            onChange={(e) => setCreateForm({ ...createForm, notes: e.target.value })}
-          />
+          <textarea rows={2} value={createForm.notes} onChange={(e) => setCreateForm({ ...createForm, notes: e.target.value })} />
 
           <div className="form-actions">
             <button type="button" className="btn-secondary" onClick={() => setShowCreate(false)}>Cancel</button>
-            <button type="submit" className="btn-primary" disabled={creating}>
+            <button type="submit" className="btn-primary" disabled={creating || !createForm.userId}>
               {creating ? "Creating..." : "Create booking"}
             </button>
           </div>

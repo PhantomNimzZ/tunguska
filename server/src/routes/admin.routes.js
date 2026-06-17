@@ -3,7 +3,7 @@ const multer = require("multer");
 const path = require("path");
 const { authenticate, authorizeAdmin } = require("../middleware/auth.middleware");
 const {
-  getUsers, updateUser,
+  getUsers, updateUser, createUser,
   getAllVenues, createVenue, updateVenue, deleteVenue,
   getAllBookings, createBookingAsAdmin, approveBooking, declineBooking, updatePaymentStatus,
   createCategory, updateCategory, createSportType, updateSportType,
@@ -40,6 +40,7 @@ router.get("/stats", getDashboardStats);
 
 // Users
 router.get("/users", getUsers);
+router.post("/users", createUser);
 router.patch("/users/:id", updateUser);
 
 // Venues

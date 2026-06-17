@@ -1787,3 +1787,109 @@ a.breadcrumb:hover { color: var(--primary); }
   color: var(--danger);
   font-style: italic;
 }
+
+/* ── User search in booking form ─────────────── */
+
+.user-search-wrapper {
+  position: relative;
+}
+
+.user-search-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  z-index: 300;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.user-search-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  font-size: 0.9rem;
+  transition: background 0.15s;
+}
+
+.user-search-item:hover { background: var(--primary-light); }
+.user-search-item:not(:last-child) { border-bottom: 1px solid var(--border); }
+
+.user-search-name { font-weight: 500; color: var(--text); }
+.user-search-email { font-size: 0.8rem; color: var(--text-muted); }
+
+.user-search-empty, .user-search-hint {
+  font-size: 0.83rem;
+  color: var(--text-muted);
+  margin-top: 0.5rem;
+}
+
+.selected-user-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--primary-light);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+  color: var(--primary-dark);
+}
+
+.chip-remove {
+  background: none;
+  border: none;
+  color: var(--primary);
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0 0.25rem;
+  line-height: 1;
+}
+
+.chip-remove:hover { color: var(--danger); }
+
+.link-btn {
+  background: none;
+  border: none;
+  color: var(--primary);
+  cursor: pointer;
+  font-size: inherit;
+  font-family: inherit;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.link-btn:hover { color: var(--primary-dark); }
+
+/* ── Inline new user form ────────────────────── */
+
+.inline-new-user {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin-top: 0.5rem;
+}
+
+.inline-new-user-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.inline-new-user-header h4 {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
