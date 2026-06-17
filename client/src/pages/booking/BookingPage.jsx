@@ -12,6 +12,19 @@ export default function BookingPage() {
   const [availability, setAvailability] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  // Local date string (fixes timezone issue with toISOString)
+  const today = useMemo(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  }, []);
+
+  const currentTime = useMemo(() => {
+    const now = new Date();
+    return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+  }, []);
+
+  const isToday = form.bookingDate === today;
+
   useEffect(() => {
     api.get(`/venues/${slug}`).then(({ data }) => setVenue(data.data));
   }, [slug]);
@@ -35,8 +48,9 @@ export default function BookingPage() {
     if (form.startTime >= form.endTime) return "End time must be after start time.";
     if (form.startTime < availability.openTime) return `Start time cannot be before ${availability.openTime}.`;
     if (form.endTime > availability.closeTime) return `End time cannot be after ${availability.closeTime}.`;
+    if (isToday && form.startTime <= currentTime) return `Start time must be after the current time (${currentTime}).`;
     return null;
-  }, [form.startTime, form.endTime, availability]);
+  }, [form.startTime, form.endTime, availability, isToday, currentTime]);
 
   // Calculate estimated cost
   const estimatedCost = useMemo(() => {
@@ -79,10 +93,13 @@ export default function BookingPage() {
 
       <form onSubmit={handleSubmit} className="booking-form">
         <label>Date</label>
-        <input type="date" required value={form.bookingDate} onChange={handleDateChange} min={new Date().toISOString().split("T")[0]} />
+        <input type="date" required value={form.bookingDate} onChange={handleDateChange} min={today} />
 
         {availability && !availability.isClosed && (
-          <p className="availability-info">Open: {availability.openTime} – {availability.closeTime}</p>
+          <p className="availability-info">
+            Open: {availability.openTime} – {availability.closeTime}
+            {isToday && <span> · Booking from {currentTime} onwards</span>}
+          </p>
         )}
         {availability?.isClosed && <p className="availability-closed">Venue is closed on this day.</p>}
 
@@ -103,7 +120,7 @@ export default function BookingPage() {
               required
               value={form.startTime}
               onChange={(e) => setForm({ ...form, startTime: e.target.value })}
-              min={availability?.openTime}
+              min={isToday && currentTime > (availability?.openTime || "00:00") ? currentTime : availability?.openTime}
               max={availability?.closeTime}
             />
           </div>

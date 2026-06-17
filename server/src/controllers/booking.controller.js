@@ -26,8 +26,31 @@ const createBooking = async (req, res, next) => {
       });
     }
 
-    // Validate against operating hours
+    // Validate booking is not in the past
+    const now = new Date();
     const requestedDate = new Date(bookingDate);
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+    const requestedDateStr = `${requestedDate.getFullYear()}-${String(requestedDate.getMonth() + 1).padStart(2, "0")}-${String(requestedDate.getDate()).padStart(2, "0")}`;
+
+    if (requestedDateStr < todayStr) {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot book a date in the past.",
+      });
+    }
+
+    // If booking is for today, ensure start time is in the future
+    if (requestedDateStr === todayStr) {
+      const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+      if (startTime <= currentTime) {
+        return res.status(400).json({
+          success: false,
+          message: `Start time must be after the current time (${currentTime}).`,
+        });
+      }
+    }
+
+    // Validate against operating hours
     const days = [
       "SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY",
       "THURSDAY", "FRIDAY", "SATURDAY",
