@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import api from "../../api/client";
 import BackNav from "../../components/common/BackNav";
 import toast from "react-hot-toast";
@@ -8,6 +8,7 @@ export default function BookingPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
   const [venue, setVenue] = useState(null);
+  const [notFound, setNotFound] = useState(false);
   const [form, setForm] = useState({ bookingDate: "", startTime: "", endTime: "", purpose: "", notes: "" });
   const [availability, setAvailability] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -44,7 +45,11 @@ export default function BookingPage() {
   const venueDoneForToday = isToday && earliestTime === null;
 
   useEffect(() => {
-    api.get(`/venues/${slug}`).then(({ data }) => setVenue(data.data));
+    api.get(`/venues/${slug}`)
+      .then(({ data }) => setVenue(data.data))
+      .catch((err) => {
+        if (err.response?.status === 404) setNotFound(true);
+      });
   }, [slug]);
 
   const checkAvailability = async (date) => {
@@ -97,6 +102,17 @@ export default function BookingPage() {
       setLoading(false);
     }
   };
+
+  if (notFound) return (
+    <div className="page placeholder-page">
+      <div className="placeholder-card">
+        <div className="not-found-code">404</div>
+        <h1>Venue not found</h1>
+        <p>This venue doesn't exist or may have been removed.</p>
+        <Link to="/categories" className="btn-primary">Browse venues</Link>
+      </div>
+    </div>
+  );
 
   if (!venue) return <div className="page"><p>Loading...</p></div>;
 

@@ -11,10 +11,12 @@ import RegisterPage from "./pages/auth/RegisterPage";
 
 // Public pages
 import HomePage from "./pages/HomePage";
+import NotFoundPage from "./pages/NotFoundPage";
 
 // User pages
 import DashboardPage from "./pages/dashboard/DashboardPage";
 import ProfilePage from "./pages/dashboard/ProfilePage";
+import PaymentHistoryPage from "./pages/dashboard/PaymentHistoryPage";
 import CategoriesPage from "./pages/venues/CategoriesPage";
 import VenueListPage from "./pages/venues/VenueListPage";
 import VenueDetailPage from "./pages/venues/VenueDetailPage";
@@ -59,6 +61,7 @@ function App() {
         {/* Authenticated user routes */}
         <Route path="/dashboard" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
         <Route path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
+        <Route path="/payment-history" element={<PrivateRoute><PaymentHistoryPage /></PrivateRoute>} />
         <Route path="/book/:slug" element={<PrivateRoute><BookingPage /></PrivateRoute>} />
         <Route path="/my-bookings" element={<PrivateRoute><MyBookingsPage /></PrivateRoute>} />
       </Route>
@@ -70,6 +73,11 @@ function App() {
         <Route path="venues" element={<AdminVenuesPage />} />
         <Route path="categories" element={<AdminCategoriesPage />} />
         <Route path="bookings" element={<AdminBookingsPage />} />
+      </Route>
+
+      {/* 404 catch-all */}
+      <Route element={<MainLayout />}>
+        <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
   );

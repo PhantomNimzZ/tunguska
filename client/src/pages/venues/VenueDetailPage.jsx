@@ -11,10 +11,26 @@ export default function VenueDetailPage() {
   const { slug } = useParams();
   const { user } = useAuth();
   const [venue, setVenue] = useState(null);
+  const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
-    api.get(`/venues/${slug}`).then(({ data }) => setVenue(data.data));
+    api.get(`/venues/${slug}`)
+      .then(({ data }) => setVenue(data.data))
+      .catch((err) => {
+        if (err.response?.status === 404) setNotFound(true);
+      });
   }, [slug]);
+
+  if (notFound) return (
+    <div className="page placeholder-page">
+      <div className="placeholder-card">
+        <div className="not-found-code">404</div>
+        <h1>Venue not found</h1>
+        <p>This venue doesn't exist or may have been removed.</p>
+        <Link to="/categories" className="btn-primary">Browse venues</Link>
+      </div>
+    </div>
+  );
 
   if (!venue) return <div className="page"><p>Loading...</p></div>;
 

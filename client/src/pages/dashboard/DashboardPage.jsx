@@ -34,7 +34,7 @@ export default function DashboardPage() {
           <h3>Manage profile</h3>
           <p>Update your name, contact details, and password</p>
         </Link>
-        <Link to="/my-bookings" className="dashboard-card">
+        <Link to="/payment-history" className="dashboard-card">
           <div className="dashboard-card-icon">💳</div>
           <h3>Payment history</h3>
           <p>View payment status for all your bookings</p>
