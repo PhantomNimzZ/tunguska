@@ -14,6 +14,7 @@ import HomePage from "./pages/HomePage";
 
 // User pages
 import DashboardPage from "./pages/dashboard/DashboardPage";
+import ProfilePage from "./pages/dashboard/ProfilePage";
 import CategoriesPage from "./pages/venues/CategoriesPage";
 import VenueListPage from "./pages/venues/VenueListPage";
 import VenueDetailPage from "./pages/venues/VenueDetailPage";
@@ -57,6 +58,7 @@ function App() {
 
         {/* Authenticated user routes */}
         <Route path="/dashboard" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
+        <Route path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
         <Route path="/book/:slug" element={<PrivateRoute><BookingPage /></PrivateRoute>} />
         <Route path="/my-bookings" element={<PrivateRoute><MyBookingsPage /></PrivateRoute>} />
       </Route>
