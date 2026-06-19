@@ -31,13 +31,13 @@ export default function HeroSlideshow({ children }) {
     });
   }, []);
 
-  // Auto-advance every 6 seconds
+  // Auto-advance every 6 seconds, resets on manual navigation
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrent((prev) => (prev + 1) % SLIDES.length);
     }, 6000);
     return () => clearInterval(timer);
-  }, []);
+  }, [current]);
 
   return (
     <section className="hero-slideshow">
