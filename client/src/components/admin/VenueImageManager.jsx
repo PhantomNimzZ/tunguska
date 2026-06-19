@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import api from "../../api/client";
+import { getImageUrl } from "../../utils/imageUrl";
 import toast from "react-hot-toast";
 
 export default function VenueImageManager({ venueId, venueName }) {
@@ -116,7 +117,7 @@ export default function VenueImageManager({ venueId, venueName }) {
         <div className="image-grid">
           {images.map((img) => (
             <div key={img.id} className={`image-card ${img.isPrimary ? "is-primary" : ""}`}>
-              <img src={img.url} alt={img.altText || venueName} />
+              <img src={getImageUrl(img.url)} alt={img.altText || venueName} />
               {img.isPrimary && <span className="primary-badge">Primary</span>}
               <div className="image-card-actions">
                 {!img.isPrimary && (

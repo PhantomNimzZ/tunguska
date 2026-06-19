@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import api from "../../api/client";
+import { getImageUrl } from "../../utils/imageUrl";
 import BackNav from "../../components/common/BackNav";
 
 export default function VenueListPage() {
@@ -67,7 +68,7 @@ export default function VenueListPage() {
           <Link key={venue.id} to={`/venue/${venue.slug}`} className="venue-card">
             <div className="venue-card-image">
               {venue.images?.[0] ? (
-                <img src={venue.images[0].url} alt={venue.name} />
+                <img src={getImageUrl(venue.images[0].url)} alt={venue.name} />
               ) : (
                 <div className="venue-card-placeholder">
                   <span>{venue.category?.name || "Venue"}</span>

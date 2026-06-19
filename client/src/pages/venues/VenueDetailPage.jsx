@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import api from "../../api/client";
+import { getImageUrl } from "../../utils/imageUrl";
 import BackNav from "../../components/common/BackNav";
 
 const DAY_ORDER = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"];
@@ -55,7 +56,7 @@ export default function VenueDetailPage() {
       {venue.images?.length > 0 && (
         <div className="venue-detail-gallery">
           <img
-            src={venue.images.find((i) => i.isPrimary)?.url || venue.images[0].url}
+            src={getImageUrl(venue.images.find((i) => i.isPrimary)?.url || venue.images[0].url)}
             alt={venue.name}
             className="venue-detail-hero-img"
           />

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../api/client";
+import { getImageUrl } from "../utils/imageUrl";
 import { useAuth } from "../context/AuthContext";
 import HeroSlideshow from "../components/common/HeroSlideshow";
 
@@ -118,7 +119,7 @@ export default function HomePage() {
                 <Link key={venue.id} to={`/venue/${venue.slug}`} className="venue-card">
                   <div className="venue-card-image">
                     {venue.images?.[0] ? (
-                      <img src={venue.images[0].url} alt={venue.name} />
+                      <img src={getImageUrl(venue.images[0].url)} alt={venue.name} />
                     ) : (
                       <div className="venue-card-placeholder">
                         <span>{venue.category?.name || "Venue"}</span>
