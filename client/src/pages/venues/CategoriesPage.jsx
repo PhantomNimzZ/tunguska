@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import api from "../../api/client";
+import BackNav from "../../components/common/BackNav";
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState([]);
@@ -11,6 +12,7 @@ export default function CategoriesPage() {
 
   return (
     <div className="page">
+      <BackNav links={[{ label: "Venues" }]} />
       <h1>Browse venues</h1>
       <div className="category-grid">
         {categories.map((cat) => (
